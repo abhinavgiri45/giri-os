@@ -59,8 +59,13 @@ if [[ ${#MISSING_TOOLS[@]} -gt 0 ]]; then
 fi
 
 # Ensure executable permissions on helper scripts and hooks
+mkdir -p "${LIVE_BUILD_DIR}/config/hooks/binary"
+if [ -f "${LIVE_BUILD_DIR}/config/hooks/live/99-link-canonical-kernel.hook.binary" ]; then
+    cp -f "${LIVE_BUILD_DIR}/config/hooks/live/99-link-canonical-kernel.hook.binary" "${LIVE_BUILD_DIR}/config/hooks/binary/99-link-canonical-kernel.hook.binary" 2>/dev/null || true
+fi
 chmod +x "${LIVE_BUILD_DIR}/auto/"* 2>/dev/null || true
 chmod +x "${LIVE_BUILD_DIR}/config/hooks/live/"* 2>/dev/null || true
+chmod +x "${LIVE_BUILD_DIR}/config/hooks/binary/"* 2>/dev/null || true
 
 # Patch live-build helper scripts for Debian Bookworm archive layout and bootloader compatibility
 if [ -f "${PROJECT_ROOT}/scripts/patch-live-build.py" ]; then

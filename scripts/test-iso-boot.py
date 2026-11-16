@@ -42,6 +42,21 @@ def main():
         print("    Status: FAIL (Invalid ISO Size)")
         sys.exit(1)
 
+    # Inspect ISO filesystem structure for bootloader kernel and initrd paths
+    print("[+] Auditing ISO filesystem structure for kernel and initrd...")
+    xorriso_bin = shutil.which("xorriso")
+    if xorriso_bin:
+        try:
+            res = subprocess.run([xorriso_bin, "-indev", str(iso_path), "-ls", "/live"], capture_output=True, text=True, timeout=20)
+            live_ls = res.stdout + res.stderr
+            print(f"[+] /live directory index:\n{live_ls}")
+            if "vmlinuz" not in live_ls:
+                print("[-] WARNING: Canonical /live/vmlinuz not detected by xorriso!")
+            if "initrd.img" not in live_ls:
+                print("[-] WARNING: Canonical /live/initrd.img not detected by xorriso!")
+        except Exception as e:
+            print(f"[*] Note: xorriso audit skipped: {e}")
+
     qemu_bin = shutil.which("qemu-system-x86_64")
     if not qemu_bin:
         print("[-] QEMU emulator ('qemu-system-x86_64') is not installed in PATH.")

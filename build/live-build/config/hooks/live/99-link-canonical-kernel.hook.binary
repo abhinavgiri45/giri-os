@@ -1,0 +1,69 @@
+#!/bin/sh
+set -e
+
+# ====================================================================
+# GIRI OS 0.1 "Genesis" — Live Binary Hook: Canonical Kernel & Initrd Linker
+# Runs during lb binary_hooks before xorriso creates the ISO image
+# Author: Abhinav Giri / Giri OS Core Engineering Team
+# ====================================================================
+
+echo "======================================================================"
+echo ">>> [Giri OS] Binary Hook: Ensuring Canonical Bootloader Kernel & Initrd"
+echo "======================================================================"
+
+LIVE_DIR="binary/live"
+
+if [ ! -d "${LIVE_DIR}" ]; then
+    echo "[-] Warning: ${LIVE_DIR} directory not found. Skipping canonical link stage."
+    exit 0
+fi
+
+cd "${LIVE_DIR}"
+
+# 1. Detect dynamic Linux kernel image
+VMLINUZ_FILE=""
+for k in vmlinuz-*; do
+    if [ -f "$k" ]; then
+        VMLINUZ_FILE="$k"
+        break
+    fi
+done
+
+if [ -n "${VMLINUZ_FILE}" ] && [ -f "${VMLINUZ_FILE}" ]; then
+    echo "[+] Found dynamic kernel image: ${VMLINUZ_FILE}"
+    rm -f vmlinuz
+    ln -f "${VMLINUZ_FILE}" vmlinuz 2>/dev/null || cp -fL "${VMLINUZ_FILE}" vmlinuz
+    echo "[+] Successfully established canonical kernel link: ${VMLINUZ_FILE} -> vmlinuz"
+else
+    echo "[-] Warning: No vmlinuz-* found in ${LIVE_DIR}"
+fi
+
+# 2. Detect dynamic initial ramdisk
+INITRD_FILE=""
+for i in initrd.img-*; do
+    if [ -f "$i" ]; then
+        INITRD_FILE="$i"
+        break
+    fi
+done
+
+if [ -n "${INITRD_FILE}" ] && [ -f "${INITRD_FILE}" ]; then
+    echo "[+] Found dynamic ramdisk image: ${INITRD_FILE}"
+    rm -f initrd.img
+    ln -f "${INITRD_FILE}" initrd.img 2>/dev/null || cp -fL "${INITRD_FILE}" initrd.img
+    echo "[+] Successfully established canonical initrd link: ${INITRD_FILE} -> initrd.img"
+else
+    echo "[-] Warning: No initrd.img-* found in ${LIVE_DIR}"
+fi
+
+# 3. Ensure memory diagnostics binary compatibility
+if [ -f "memtest" ] && [ ! -f "memtest86+.bin" ]; then
+    ln -f "memtest" "memtest86+.bin" 2>/dev/null || cp -fL "memtest" "memtest86+.bin"
+    echo "[+] Linked memtest -> memtest86+.bin"
+elif [ -f "memtest86+.bin" ] && [ ! -f "memtest" ]; then
+    ln -f "memtest86+.bin" "memtest" 2>/dev/null || cp -fL "memtest86+.bin" "memtest"
+    echo "[+] Linked memtest86+.bin -> memtest"
+fi
+
+echo "[+] Binary hook complete. Verified /live entries:"
+ls -la vmlinuz* initrd.img* memtest* 2>/dev/null || true

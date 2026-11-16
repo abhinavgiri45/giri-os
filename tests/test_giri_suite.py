@@ -440,6 +440,46 @@ class TestGiriOSCore(unittest.TestCase):
 
         cc.destroy()
 
+    def test_28_bootloader_configuration_and_binary_hook(self):
+        """Test bootloader configurations and canonical kernel linker binary hook."""
+        isolinux_path = os.path.join(ROOT_DIR, "boot", "isolinux", "isolinux.cfg")
+        grub_path = os.path.join(ROOT_DIR, "boot", "grub", "grub.cfg")
+        hook_path = os.path.join(ROOT_DIR, "build", "live-build", "config", "hooks", "live", "99-link-canonical-kernel.hook.binary")
+
+        # 1. Verify ISOLINUX configuration
+        self.assertTrue(os.path.isfile(isolinux_path), "isolinux.cfg missing")
+        with open(isolinux_path, "r", encoding="utf-8") as f:
+            isolinux_content = f.read()
+        self.assertIn("Giri OS 0.1 Genesis", isolinux_content)
+        self.assertIn("KERNEL /live/vmlinuz", isolinux_content)
+        self.assertIn("APPEND initrd=/live/initrd.img", isolinux_content)
+        self.assertIn("Safe Graphics Mode", isolinux_content)
+        self.assertIn("System Recovery Mode", isolinux_content)
+
+        # 2. Verify GRUB configuration with dynamic kernel fallback
+        self.assertTrue(os.path.isfile(grub_path), "grub.cfg missing")
+        with open(grub_path, "r", encoding="utf-8") as f:
+            grub_content = f.read()
+        self.assertIn("Giri OS 0.1 (Genesis) — Standard Session", grub_content)
+        self.assertIn("set giri_kernel=", grub_content)
+        self.assertIn("set giri_initrd=", grub_content)
+        self.assertIn("linux ${giri_kernel}", grub_content)
+        self.assertIn("initrd ${giri_initrd}", grub_content)
+        self.assertIn("Safe Graphics Mode", grub_content)
+        self.assertIn("System Recovery Mode", grub_content)
+        self.assertIn("fwsetup", grub_content)
+
+        # 3. Verify Live-Build Binary Hook
+        self.assertTrue(os.path.isfile(hook_path), "99-link-canonical-kernel.hook.binary missing")
+        with open(hook_path, "r", encoding="utf-8") as f:
+            hook_content = f.read()
+        self.assertIn("Canonical Kernel & Initrd Linker", hook_content)
+        self.assertIn("vmlinuz-*", hook_content)
+        self.assertIn("initrd.img-*", hook_content)
+        self.assertIn("ln -f", hook_content)
+        self.assertIn("memtest", hook_content)
+
+
 
 if __name__ == "__main__":
     unittest.main()

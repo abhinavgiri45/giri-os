@@ -66,6 +66,19 @@ def patch_live_build():
                         content = new_content
                         modified = True
 
+                # 4. Patch binary_linux-image to automatically create canonical vmlinuz and initrd.img links
+                if "binary_linux-image" in filepath or "lb_binary_linux-image" in filepath:
+                    if "ln -sf" not in content and "binary/live" in content:
+                        # Append canonical link creation in binary_linux-image
+                        link_code = (
+                            '\n\t\t# Giri OS: Create canonical kernel and initrd links in binary/live\n'
+                            '\t\t(cd binary/live && for k in vmlinuz-*; do [ -f "$k" ] && cp -fL "$k" vmlinuz && break; done) 2>/dev/null || true\n'
+                            '\t\t(cd binary/live && for i in initrd.img-*; do [ -f "$i" ] && cp -fL "$i" initrd.img && break; done) 2>/dev/null || true\n'
+                        )
+                        if link_code not in content:
+                            content += link_code
+                            modified = True
+
                 if modified:
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(content)
