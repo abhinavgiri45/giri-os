@@ -1,0 +1,122 @@
+[
+  {
+    "id": "giri-origin",
+    "name": "Giri Origin",
+    "filename": "giri-origin.png",
+    "category": "Signature Default",
+    "paired_theme": "Giri Dark / Modern",
+    "is_default": true,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-origin.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\giri-origin.png"
+  },
+  {
+    "id": "cosmic-horizon",
+    "name": "Cosmic Horizon",
+    "filename": "cosmic-horizon.png",
+    "category": "Space Landscape",
+    "paired_theme": "Giri Midnight",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\cosmic-horizon.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\cosmic-horizon.png"
+  },
+  {
+    "id": "infinite-motion",
+    "name": "Infinite Motion",
+    "filename": "infinite-motion.png",
+    "category": "Flowing Abstract",
+    "paired_theme": "Giri Modern",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\infinite-motion.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\infinite-motion.png"
+  },
+  {
+    "id": "digital-dimensions",
+    "name": "Digital Dimensions",
+    "filename": "digital-dimensions.png",
+    "category": "Futuristic Architecture",
+    "paired_theme": "Giri Dark",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\digital-dimensions.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\digital-dimensions.png"
+  },
+  {
+    "id": "midnight-flow",
+    "name": "Midnight Flow",
+    "filename": "midnight-flow.png",
+    "category": "Deep Contrast",
+    "paired_theme": "Giri Midnight",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\midnight-flow.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\midnight-flow.png"
+  },
+  {
+    "id": "electric-geometry",
+    "name": "Electric Geometry",
+    "filename": "electric-geometry.png",
+    "category": "Geometric Abstract",
+    "paired_theme": "Giri Dark",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\electric-geometry.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\electric-geometry.png"
+  },
+  {
+    "id": "beyond-space",
+    "name": "Beyond Space",
+    "filename": "beyond-space.png",
+    "category": "Cosmic Nebula",
+    "paired_theme": "Giri Midnight",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\beyond-space.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\beyond-space.png"
+  },
+  {
+    "id": "quantum",
+    "name": "Quantum",
+    "filename": "quantum.png",
+    "category": "Scientific Minimal",
+    "paired_theme": "Giri Modern",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\quantum.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\quantum.png"
+  },
+  {
+    "id": "aurora",
+    "name": "Aurora",
+    "filename": "aurora.png",
+    "category": "Atmospheric Wave",
+    "paired_theme": "Giri Dark",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\aurora.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\aurora.png"
+  },
+  {
+    "id": "pure-minimal",
+    "name": "Pure Minimal",
+    "filename": "pure-minimal.png",
+    "category": "Ultra-Clean Gradient",
+    "paired_theme": "Giri Classic",
+    "is_default": false,
+    "aspect_ratio": "16:9",
+    "resolution": "1920x1080",
+    "file_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\pure-minimal.png",
+    "thumb_path": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\thumbnails\\pure-minimal.png"
+  }
+]

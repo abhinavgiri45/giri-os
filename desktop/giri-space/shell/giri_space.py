@@ -5,41 +5,44 @@ Author: Abhinav Giri / Giri OS Core Engineering Team
 License: GPL-3.0-or-later
 
 Official Giri Space desktop shell:
-- Four-pane geometric window brand emblem
-- Giri Top Bar (Clock, Workspaces, Quick Status, Quick Settings)
-- Giri Dock (Floating application dock with active indicators)
-- Giri Launch (Categorized high-speed application search launcher)
-- Giri Spaces (Virtual workspaces switcher)
-- Giri Profile integration (Classic vs Modern visual rendering modes)
+- Full live wallpaper engine featuring 'Giri Origin' as default
+- Live real-time wallpaper updates without restarting
+- Support for Fill, Fit, Stretch, Center, and Solid Colour modes
+- Per-Space virtual desktop wallpaper assignment
+- Giri Top Bar, Floating Dock, Giri Launch, and Quick Settings
 """
 
 import sys
 import os
 import time
 import math
+import json
 import subprocess
 
 try:
     import tkinter as tk
     from tkinter import ttk, messagebox
+    from PIL import Image, ImageTk
 except ImportError:
-    print("Error: Tkinter is required to run the Giri Space desktop prototype.")
+    print("Error: Tkinter and Pillow are required to run the Giri Space desktop prototype.")
     sys.exit(1)
 
+# Paths
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+WALLPAPER_DIR = os.path.join(ROOT_DIR, "branding", "wallpapers")
+WALLPAPER_CONFIG = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+
 # Import local control center
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
+sys.path.insert(0, ROOT_DIR)
 try:
-    from desktop.giri_space.control_center.control_center import GiriControlCenter
+    import importlib.util
+    cc_path = os.path.join(os.path.dirname(__file__), "..", "control-center", "control_center.py")
+    spec = importlib.util.spec_from_file_location("control_center", cc_path)
+    cc_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cc_mod)
+    GiriControlCenter = cc_mod.GiriControlCenter
 except Exception:
-    try:
-        import importlib.util
-        cc_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "control-center", "control_center.py"))
-        spec = importlib.util.spec_from_file_location("control_center", cc_path)
-        cc_mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(cc_mod)
-        GiriControlCenter = cc_mod.GiriControlCenter
-    except Exception:
-        GiriControlCenter = None
+    GiriControlCenter = None
 
 
 class GiriSpaceDesktop(tk.Tk):
@@ -59,19 +62,23 @@ class GiriSpaceDesktop(tk.Tk):
         self.quick_settings_open = False
         self.running_apps = {"Giri Files", "Giri Control"}
 
-        # Official Color Palette
+        # Palette definition
         self.colors = {
-            "bg_dark": "#060a14",
+            "bg_dark": "#050811",
             "topbar_bg": "#0a1020",
             "dock_bg": "#0c1428",
             "dock_border": "#1c2b4d",
-            "pane_tl": "#00d2ff",   # Electric Cyan-Blue
-            "pane_tr": "#0066ff",   # Vivid Electric Blue
-            "pane_bl": "#7928ca",   # Electric Violet
-            "pane_br": "#a855f7",   # Radiant Violet-Magenta
+            "pane_tl": "#00d2ff",
+            "pane_tr": "#0066ff",
+            "pane_bl": "#7928ca",
+            "pane_br": "#a855f7",
             "text_light": "#e2e8f0",
             "text_muted": "#8ea4c8",
         }
+
+        # Load wallpaper settings
+        self.wallpaper_config = self._load_wallpaper_config()
+        self.bg_photo = None  # Reference to prevent garbage collection
 
         self.setup_desktop()
         self.start_clock_timer()
@@ -79,10 +86,36 @@ class GiriSpaceDesktop(tk.Tk):
         if self.non_interactive:
             self.withdraw()
 
+    def _load_wallpaper_config(self):
+        default_wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
+        if os.path.isfile(WALLPAPER_CONFIG):
+            try:
+                with open(WALLPAPER_CONFIG, "r") as f:
+                    cfg = json.load(f)
+                    if not os.path.isfile(cfg.get("current_wallpaper", "")):
+                        cfg["current_wallpaper"] = default_wp
+                    return cfg
+            except Exception:
+                pass
+        return {
+            "current_wallpaper": default_wp,
+            "current_name": "Giri Origin",
+            "mode": "Fill",
+            "is_solid_color": False,
+            "solid_color": "#050811",
+            "per_space": {
+                "1": default_wp,
+                "2": os.path.join(WALLPAPER_DIR, "digital-dimensions.png"),
+                "3": os.path.join(WALLPAPER_DIR, "quantum.png"),
+                "4": os.path.join(WALLPAPER_DIR, "midnight-flow.png")
+            }
+        }
+
     def setup_desktop(self):
         # 1. Background Wallpaper Canvas
         self.canvas = tk.Canvas(self, bg=self.colors["bg_dark"], highlightthickness=0)
         self.canvas.pack(fill="both", expand=True)
+        self.bind("<Configure>", lambda e: self.draw_wallpaper())
         self.draw_wallpaper()
 
         # 2. Giri Top Bar (Fixed at top of screen)
@@ -98,55 +131,104 @@ class GiriSpaceDesktop(tk.Tk):
         self.setup_quick_settings()
 
     def draw_wallpaper(self):
-        self.canvas.delete("all")
         w = self.winfo_width() or 1120
         h = self.winfo_height() or 720
+        self.canvas.delete("all")
 
-        cx, cy = w // 2, h // 2
+        # 1. Check if Solid Color is active
+        if self.wallpaper_config.get("is_solid_color", False):
+            sc = self.wallpaper_config.get("solid_color", "#050811")
+            self.canvas.create_rectangle(0, 0, w, h, fill=sc, outline="")
+            self._draw_overlay_hints(w, h, f"Solid Colour ({sc})")
+            return
 
-        # Draw Official Four-Pane Geometric Window Symbol (Center Watermark)
-        # Symmetrical 2x2 formation: 120x120 total, 10px spacing
-        pane_w = 54
-        gap = 12
-        x0 = cx - (pane_w * 2 + gap) // 2
-        y0 = cy - 70
-        x1 = x0 + pane_w + gap
-        y1 = y0 + pane_w + gap
+        # 2. Check Wallpaper File for Active Space
+        space_key = str(self.active_space)
+        wp_file = self.wallpaper_config.get("per_space", {}).get(space_key)
+        if not wp_file or not os.path.isfile(wp_file):
+            wp_file = self.wallpaper_config.get("current_wallpaper", "")
 
-        # 4 Geometric Panes (Flat vector design)
-        self.canvas.create_rectangle(x0, y0, x0 + pane_w, y0 + pane_w, fill=self.colors["pane_tl"], outline="")
-        self.canvas.create_rectangle(x1, y0, x1 + pane_w, y0 + pane_w, fill=self.colors["pane_tr"], outline="")
-        self.canvas.create_rectangle(x0, y1, x0 + pane_w, y1 + pane_w, fill=self.colors["pane_bl"], outline="")
-        self.canvas.create_rectangle(x1, y1, x1 + pane_w, y1 + pane_w, fill=self.colors["pane_br"], outline="")
+        if not os.path.isfile(wp_file):
+            wp_file = os.path.join(WALLPAPER_DIR, "giri-origin.png")
 
-        # Wordmark: GIRI OS
+        mode = self.wallpaper_config.get("mode", "Fill")
+
+        # Try to load and scale wallpaper with Pillow
+        if os.path.isfile(wp_file):
+            try:
+                pil_img = Image.open(wp_file)
+                iw, ih = pil_img.size
+
+                if mode == "Fill" or mode == "Stretch":
+                    scaled = pil_img.resize((w, h), Image.Resampling.BILINEAR)
+                    self.bg_photo = ImageTk.PhotoImage(scaled)
+                    self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
+                elif mode == "Fit":
+                    ratio = min(w / iw, h / ih)
+                    nw, nh = int(iw * ratio), int(ih * ratio)
+                    scaled = pil_img.resize((nw, nh), Image.Resampling.BILINEAR)
+                    self.bg_photo = ImageTk.PhotoImage(scaled)
+                    ox = (w - nw) // 2
+                    oy = (h - nh) // 2
+                    self.canvas.create_rectangle(0, 0, w, h, fill="#04060c", outline="")
+                    self.canvas.create_image(ox, oy, image=self.bg_photo, anchor="nw")
+                elif mode == "Center":
+                    self.bg_photo = ImageTk.PhotoImage(pil_img)
+                    self.canvas.create_rectangle(0, 0, w, h, fill="#04060c", outline="")
+                    ox = (w - iw) // 2
+                    oy = (h - ih) // 2
+                    self.canvas.create_image(ox, oy, image=self.bg_photo, anchor="nw")
+                else:  # Tile or fallback
+                    scaled = pil_img.resize((w, h), Image.Resampling.BILINEAR)
+                    self.bg_photo = ImageTk.PhotoImage(scaled)
+                    self.canvas.create_image(0, 0, image=self.bg_photo, anchor="nw")
+
+                wp_name = os.path.splitext(os.path.basename(wp_file))[0].replace("-", " ").title()
+                self._draw_overlay_hints(w, h, wp_name)
+                return
+            except Exception as e:
+                print(f"Warning: Could not render wallpaper: {e}")
+
+        # Fallback Procedural Dark Wallpaper if file fails
+        self.canvas.create_rectangle(0, 0, w, h, fill="#060a14", outline="")
+        self._draw_overlay_hints(w, h, "Giri Space")
+
+    def _draw_overlay_hints(self, w, h, wp_name):
         self.canvas.create_text(
-            cx, cy + 70,
-            text="GIRI OS",
-            font=("Segoe UI", 32, "bold"),
-            fill="#ffffff"
-        )
-        self.canvas.create_text(
-            cx, cy + 106,
-            text="ONE SYSTEM. INFINITE POSSIBILITIES.",
-            font=("Segoe UI", 10, "bold"),
-            fill="#64748b"
-        )
-
-        # Profile indicator on wallpaper
-        self.canvas.create_text(
-            w - 18, h - 90,
-            text=f"Giri OS 0.1 Genesis  •  {self.profile.capitalize()} Mode",
+            w - 20, h - 85,
+            text=f"Wallpaper: {wp_name}  •  Space {self.active_space}",
             font=("Segoe UI", 9),
             anchor="e",
-            fill="#2c3e66"
+            fill="#3e527a"
         )
+        self.canvas.create_text(
+            w - 20, h - 105,
+            text=f"Giri OS 0.1 Genesis  •  {self.profile.capitalize()} Mode",
+            font=("Segoe UI", 9, "bold"),
+            anchor="e",
+            fill="#00d2ff"
+        )
+
+    def set_wallpaper_live(self, full_path, mode="Fill"):
+        """Live wallpaper update callback without restarting."""
+        self.wallpaper_config["current_wallpaper"] = full_path
+        self.wallpaper_config["mode"] = mode
+        self.wallpaper_config["is_solid_color"] = False
+        space_key = str(self.active_space)
+        self.wallpaper_config["per_space"][space_key] = full_path
+        self.draw_wallpaper()
+
+    def set_solid_color_live(self, hex_color):
+        """Live solid colour background callback without restarting."""
+        self.wallpaper_config["is_solid_color"] = True
+        self.wallpaper_config["solid_color"] = hex_color
+        self.draw_wallpaper()
 
     def setup_topbar(self):
         self.topbar = tk.Frame(self, bg=self.colors["topbar_bg"], height=38)
         self.topbar.place(x=0, y=0, relwidth=1.0, height=38)
 
-        # Left: Giri Launcher Trigger with four-pane window glyph
+        # Left: Giri Launcher Trigger
         self.btn_logo = tk.Button(
             self.topbar,
             text=" ⊞ GIRI ",
@@ -417,6 +499,8 @@ class GiriSpaceDesktop(tk.Tk):
                 btn.config(bg="#16223d", fg="#ffffff")
             else:
                 btn.config(bg=self.colors["topbar_bg"], fg="#8ea4c8")
+        # Update wallpaper for this space if assigned
+        self.draw_wallpaper()
 
     def switch_profile(self, profile):
         self.profile = profile
@@ -463,7 +547,7 @@ if __name__ == "__main__":
 
     if "--verify" in sys.argv:
         app = GiriSpaceDesktop(profile=profile_arg, non_interactive=True)
-        print(f"Giri Space Desktop shell ({profile_arg.upper()} profile) verified successfully.")
+        print(f"Giri Space Desktop shell ({profile_arg.upper()} profile) with wallpaper engine verified successfully.")
         app.destroy()
     else:
         app = GiriSpaceDesktop(profile=profile_arg)

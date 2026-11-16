@@ -1,5 +1,6 @@
 # ====================================================================
 # GIRI OS — CALAMARES BRANDING SPECIFICATION
+# Default Wallpaper: Giri Origin (Signature 16:9 Desktop Background)
 # ====================================================================
 ---
 componentName: giri
@@ -18,9 +19,9 @@ strings:
     donateUrl:           "https://girios.org"
 
 images:
-    productLogo:         "/usr/share/icons/hicolor/scalable/apps/giri-logo-icon.svg"
-    productIcon:         "/usr/share/icons/hicolor/scalable/apps/giri-logo-icon.svg"
-    productWelcome:      "/usr/share/backgrounds/giri-orbit-dark.svg"
+    productLogo:         "/usr/share/icons/hicolor/scalable/apps/giri-os-icon.svg"
+    productIcon:         "/usr/share/icons/hicolor/scalable/apps/giri-os-icon.svg"
+    productWelcome:      "/usr/share/backgrounds/giri-origin.png"
 
 slideshow:               []
 
