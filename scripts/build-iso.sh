@@ -62,6 +62,12 @@ fi
 chmod +x "${LIVE_BUILD_DIR}/auto/"* 2>/dev/null || true
 chmod +x "${LIVE_BUILD_DIR}/config/hooks/live/"* 2>/dev/null || true
 
+# Patch live-build helper scripts for Debian Bookworm archive layout (/main/Contents-*.gz)
+if [ -d /usr/lib/live/build ]; then
+    echo "[+] Patching live-build helper scripts for Debian Bookworm repository layout..."
+    sed -i 's|/Contents-|/main/Contents-|g' /usr/lib/live/build/* 2>/dev/null || true
+fi
+
 # 4. Stage Chroot Overlays (Branding, Themes, Desktop, Core Services)
 echo "[+] Staging Giri OS branding and desktop components into chroot overlays..."
 INCLUDES_CHROOT="${LIVE_BUILD_DIR}/config/includes.chroot"

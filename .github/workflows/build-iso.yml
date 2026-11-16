@@ -87,6 +87,8 @@ jobs:
             ovmf \
             file \
             tree
+          echo "[+] Patching live-build helper scripts for Debian Bookworm repository layout..."
+          sudo sed -i 's|/Contents-|/main/Contents-|g' /usr/lib/live/build/* 2>/dev/null || true
 
       - name: Run Giri OS Pre-Flight Test Suite
         run: |
