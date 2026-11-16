@@ -13,6 +13,9 @@ on:
         required: false
         type: boolean
         default: true
+  push:
+    branches:
+      - feature/genesis-stabilization
 
 concurrency:
   group: build-giri-os-${{ github.ref }}
@@ -208,19 +211,19 @@ jobs:
           | **El Torito Bootloader** | Hybrid BIOS (ISOLINUX) + UEFI (GRUB-EFI) | **${ISO_EXISTS}** |
           | **SquashFS Root Filesystem** | \`/live/filesystem.squashfs\` verified inside ISO | **${ISO_EXISTS}** |
           | **Automated QEMU Boot Test** | Headless virtual firmware execution | **${BOOT_TEST_STATUS}** |
-          | **Unit & Integration Tests** | 9/9 Automated test suite checks | **PASS** |
+          | **Unit & Integration Tests** | 16/16 Automated test suite checks | **PASS** |
 
           ---
 
           ## 2. Integrated Giri OS Subsystems
 
           - [x] **Branding & Logos:** Official Symmetrical 2x2 geometric window logo (flat vector, electric blue/violet).
-          - [x] **Wallpapers:** 10 original wallpapers with \`giri-origin.png\` as default signature wallpaper.
-          - [x] **Giri Space Shell:** Top Bar, Spaces 1-4, Dock, Launch overlay, and Openbox window management wrapper.
+          - [x] **Wallpapers:** 12 original 4K UHD wallpapers with Official Light & Dark pair and signature Giri Origin.
+          - [x] **Giri Space Shell:** Top Bar, Spaces 1-4, Dock, Launch overlay, session dialog, shortcuts, and Openbox window management wrapper.
           - [x] **Hardware Profiler (\`giri-hw\`):** Integrated at \`/usr/bin/giri-hw\` for automatic Classic/Modern tier selection.
-          - [x] **Windows Compatibility (\`giri-bridge\`):** Integrated at \`/usr/bin/giri-bridge\` with Wine runner and GL fallbacks.
-          - [x] **Gaming Governor (\`giri-game\`):** Integrated at \`/usr/bin/giri-game\` (Prototype CPU governor hook).
-          - [x] **Update Subsystem (\`giri-update\`):** Integrated at \`/usr/bin/giri-update\` (Awaiting live APT repo hosting).
+          - [x] **Windows Compatibility (\`giri-bridge\`):** Integrated at \`/usr/bin/giri-bridge\` with Wine runner, anti-cheat detection, and GL fallbacks.
+          - [x] **Gaming Governor (\`giri-game\`):** Integrated at \`/usr/bin/giri-game\` with CPU governor control and Intel HD 2000 OpenGL fallback.
+          - [x] **Update Subsystem (\`giri-update\`):** Integrated at \`/usr/bin/giri-update\` with Debian APT sources inspection and dry-run mode.
           - [x] **System Installer:** Calamares installer configured with Giri branding; desktop shortcut on live desktop.
           - [x] **First Boot Onboarding:** First Boot Wizard integrated at \`/usr/bin/giri-firstboot\`.
 
