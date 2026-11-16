@@ -65,7 +65,7 @@ chmod +x "${LIVE_BUILD_DIR}/config/hooks/live/"* 2>/dev/null || true
 # Patch live-build helper scripts for Debian Bookworm archive layout (/main/Contents-*.gz)
 if [ -d /usr/lib/live/build ]; then
     echo "[+] Patching live-build helper scripts for Debian Bookworm repository layout..."
-    sed -i 's|/Contents-|/main/Contents-|g' /usr/lib/live/build/* 2>/dev/null || true
+    python3 -c "import glob, re; [open(f, 'w').write(re.sub(r'/dists/([^/]+)/(?:main/)*Contents-', r'/dists/\1/main/Contents-', open(f).read())) for f in glob.glob('/usr/lib/live/build/*') if 'Contents-' in open(f).read()]" 2>/dev/null || true
 fi
 
 # 4. Stage Chroot Overlays (Branding, Themes, Desktop, Core Services)
