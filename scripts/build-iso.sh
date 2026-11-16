@@ -62,11 +62,10 @@ fi
 chmod +x "${LIVE_BUILD_DIR}/auto/"* 2>/dev/null || true
 chmod +x "${LIVE_BUILD_DIR}/config/hooks/live/"* 2>/dev/null || true
 
-# Patch live-build helper scripts for Debian Bookworm archive layout (/main/Contents-*.gz) and bootloader compatibility
-if [ -d /usr/lib/live/build ]; then
-    echo "[+] Patching live-build helper scripts for Debian Bookworm repository layout and bootloader compatibility..."
-    python3 -c "import glob, re; [open(f, 'w').write(re.sub(r'/dists/([^/]+)/(?:main/)*Contents-', r'/dists/\1/main/Contents-', open(f).read())) for f in glob.glob('/usr/lib/live/build/*') if 'Contents-' in open(f).read()]" 2>/dev/null || true
-    python3 -c "import glob; [open(f, 'w').write(open(f).read().replace('(cd \"$tmpdir\" && cpio -i) < ${_TARGET}/bootlogo', 'if [ -f \"${_TARGET}/bootlogo\" ]; then (cd \"$tmpdir\" && cpio -i) < ${_TARGET}/bootlogo').replace('(cd \"$tmpdir\" && ls -1 | cpio --quiet -o) > ${_TARGET}/bootlogo\nrm -rf \"$tmpdir\"', '(cd \"$tmpdir\" && ls -1 | cpio --quiet -o) > ${_TARGET}/bootlogo\nfi\nrm -rf \"$tmpdir\"')) for f in glob.glob('/usr/lib/live/build/*') if 'bootlogo' in open(f).read()]" 2>/dev/null || true
+# Patch live-build helper scripts for Debian Bookworm archive layout and bootloader compatibility
+if [ -f "${PROJECT_ROOT}/scripts/patch-live-build.py" ]; then
+    echo "[+] Running Giri OS live-build compatibility patcher..."
+    python3 "${PROJECT_ROOT}/scripts/patch-live-build.py" || true
 fi
 
 # Dereference and replace any symlinks in host live-build bootloader templates with actual binaries

@@ -89,9 +89,8 @@ jobs:
             ovmf \
             file \
             tree
-          echo "[+] Patching live-build helper scripts for Debian Bookworm repository layout and bootloader compatibility..."
-          sudo python3 -c "import glob, re; [open(f, 'w').write(re.sub(r'/dists/([^/]+)/(?:main/)*Contents-', r'/dists/\1/main/Contents-', open(f).read())) for f in glob.glob('/usr/lib/live/build/*') if 'Contents-' in open(f).read()]" || true
-          sudo python3 -c "import glob; [open(f, 'w').write(open(f).read().replace('(cd \"$tmpdir\" && cpio -i) < ${_TARGET}/bootlogo', 'if [ -f \"${_TARGET}/bootlogo\" ]; then (cd \"$tmpdir\" && cpio -i) < ${_TARGET}/bootlogo').replace('(cd \"$tmpdir\" && ls -1 | cpio --quiet -o) > ${_TARGET}/bootlogo\nrm -rf \"$tmpdir\"', '(cd \"$tmpdir\" && ls -1 | cpio --quiet -o) > ${_TARGET}/bootlogo\nfi\nrm -rf \"$tmpdir\"')) for f in glob.glob('/usr/lib/live/build/*') if 'bootlogo' in open(f).read()]" || true
+          echo "[+] Running Giri OS live-build compatibility patcher..."
+          sudo python3 scripts/patch-live-build.py || true
 
       - name: Run Giri OS Pre-Flight Test Suite
         run: |
