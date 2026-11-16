@@ -18,7 +18,7 @@
 ---
 
 **Founder & Lead Architect:** Abhinav Giri  
-**Base Distribution:** Debian GNU/Linux (Bookworm 12 / Trixie 13 Foundation)  
+**Base Distribution:** Debian GNU/Linux 12 (Bookworm)  
 **Target Architectures:** x86_64 (AMD64)  
 **License:** GNU General Public License v3.0 (GPL-3.0-or-later) & CC-BY-4.0 (Assets & Docs)  
 **Status:** Active Development — Milestone 0.1 ("Genesis")

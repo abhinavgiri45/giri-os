@@ -3,6 +3,7 @@
 # GIRI OS 0.1 "Genesis" — Master ISO Build Script
 # Author: Abhinav Giri / Giri OS Core Engineering Team
 # License: GPL-3.0-or-later
+# Base: Debian 12 (Bookworm) amd64
 # ====================================================================
 
 set -euo pipefail
@@ -28,12 +29,12 @@ fi
 # 2. Disk Space Safety Check
 echo "[+] Checking available disk space..."
 AVAILABLE_KB=$(df -P "${LIVE_BUILD_DIR}" | awk 'NR==2 {print $4}')
-REQUIRED_KB=$((15 * 1024 * 1024)) # 15 GB in KB
+REQUIRED_KB=$((12 * 1024 * 1024)) # 12 GB in KB minimum
 
 if [[ "${AVAILABLE_KB}" -lt "${REQUIRED_KB}" ]]; then
     echo "[-] Error: Insufficient free disk space."
     echo "    Available: $((AVAILABLE_KB / 1024 / 1024)) GB"
-    echo "    Required:  15 GB minimum for Debian live-build caching and squashfs."
+    echo "    Required:  12 GB minimum for Debian live-build caching and squashfs."
     exit 1
 fi
 echo "[+] Disk space verified: $((AVAILABLE_KB / 1024 / 1024)) GB free."
@@ -52,39 +53,69 @@ if [[ ${#MISSING_TOOLS[@]} -gt 0 ]]; then
     exit 1
 fi
 
-# 4. Stage Chroot Assets (Branding, Themes, Desktop components)
+# 4. Stage Chroot Overlays (Branding, Themes, Desktop, Core Services)
 echo "[+] Staging Giri OS branding and desktop components into chroot overlays..."
 INCLUDES_CHROOT="${LIVE_BUILD_DIR}/config/includes.chroot"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-orbit"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/grub/themes/giri"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/backgrounds"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/pixmaps"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/applications"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/giri-space"
-mkdir -p "${INCLUDES_CHROOT}/etc"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/hardware"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/compatibility"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/gaming"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/updater"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/first-boot"
+mkdir -p "${INCLUDES_CHROOT}/etc/calamares/modules"
+mkdir -p "${INCLUDES_CHROOT}/etc/skel/Desktop"
 
-# Copy Wallpapers & Logos
+# 4a. Copy Wallpapers & Logos
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.svg "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/"*.svg "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
+cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.png" "${INCLUDES_CHROOT}/usr/share/pixmaps/giri-os-icon.png" || true
 
-# Copy Plymouth Theme
+# 4b. Copy Plymouth Theme
 cp -rf "${PROJECT_ROOT}/boot/plymouth/giri-orbit/"* "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-orbit/"
 
-# Copy GRUB Theme
+# 4c. Copy GRUB Theme
 cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_CHROOT}/usr/share/grub/themes/giri/"
 
-# Copy Giri Space Desktop
+# 4d. Copy Giri Space Desktop
 cp -rf "${PROJECT_ROOT}/desktop/giri-space/"* "${INCLUDES_CHROOT}/usr/share/giri-space/"
 
-# Copy Calamares Installer Settings & Modules
-mkdir -p "${INCLUDES_CHROOT}/etc/calamares/modules"
+# 4e. Copy Core Giri Subsystems
+cp -rf "${PROJECT_ROOT}/hardware/"* "${INCLUDES_CHROOT}/usr/lib/giri/hardware/"
+cp -rf "${PROJECT_ROOT}/compatibility/"* "${INCLUDES_CHROOT}/usr/lib/giri/compatibility/"
+cp -rf "${PROJECT_ROOT}/gaming/"* "${INCLUDES_CHROOT}/usr/lib/giri/gaming/"
+cp -rf "${PROJECT_ROOT}/updater/"* "${INCLUDES_CHROOT}/usr/lib/giri/updater/"
+cp -rf "${PROJECT_ROOT}/installer/first-boot/"* "${INCLUDES_CHROOT}/usr/lib/giri/first-boot/"
+
+# 4f. Copy Calamares Installer Settings & Modules
 cp -f "${PROJECT_ROOT}/installer/calamares/settings.conf" "${INCLUDES_CHROOT}/etc/calamares/" || true
 cp -rf "${PROJECT_ROOT}/installer/calamares/modules/"* "${INCLUDES_CHROOT}/etc/calamares/modules/" || true
 
-# Copy System release files
+# 4g. Copy System release files and configurations
 cp -f "${PROJECT_ROOT}/system/etc/os-release" "${INCLUDES_CHROOT}/etc/os-release"
 cp -f "${PROJECT_ROOT}/system/etc/issue" "${INCLUDES_CHROOT}/etc/issue"
 cp -f "${PROJECT_ROOT}/system/etc/lsb-release" "${INCLUDES_CHROOT}/etc/lsb-release"
+cp -f "${PROJECT_ROOT}/system/etc/giri-wallpaper.json" "${INCLUDES_CHROOT}/etc/giri-wallpaper.json" || true
+
+# 4h. Copy Desktop shortcuts to /etc/skel/Desktop and /usr/share/applications
+cp -f "${PROJECT_ROOT}/desktop/giri-space/shortcuts/"*.desktop "${INCLUDES_CHROOT}/etc/skel/Desktop/" || true
+cp -f "${PROJECT_ROOT}/desktop/giri-space/shortcuts/"*.desktop "${INCLUDES_CHROOT}/usr/share/applications/" || true
+
+# 4i. Stage Binary ISO Bootloader Assets (GRUB and ISOLINUX)
+echo "[+] Staging binary bootloader configurations for hybrid BIOS/UEFI boot..."
+INCLUDES_BINARY="${LIVE_BUILD_DIR}/config/includes.binary"
+mkdir -p "${INCLUDES_BINARY}/boot/grub/themes/giri"
+mkdir -p "${INCLUDES_BINARY}/isolinux"
+
+cp -f "${PROJECT_ROOT}/boot/grub/grub.cfg" "${INCLUDES_BINARY}/boot/grub/grub.cfg" || true
+cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_BINARY}/boot/grub/themes/giri/" || true
+cp -f "${PROJECT_ROOT}/boot/isolinux/isolinux.cfg" "${INCLUDES_BINARY}/isolinux/isolinux.cfg" || true
 
 # 5. Execute Live-Build Process
 echo "[+] Initializing live-build configuration..."
@@ -108,11 +139,16 @@ mv -f "${ISO_OUTPUT}" "${TARGET_ISO}"
 
 echo "[+] Computing SHA-256 checksum..."
 cd "${RELEASES_DIR}"
-sha256sum "giri-os-0.1-genesis-amd64.iso" > "SHA256SUMS"
+sha256sum "giri-os-0.1-genesis-amd64.iso" > "SHA256SUMS.txt"
+cp -f "SHA256SUMS.txt" "SHA256SUMS"
+
+ISO_SIZE_BYTES=$(stat -c%s "${TARGET_ISO}")
+ISO_SIZE_MB=$((ISO_SIZE_BYTES / 1024 / 1024))
 
 echo "======================================================================"
 echo "[+] BUILD SUCCESSFUL!"
 echo "    ISO Artifact: ${TARGET_ISO}"
-echo "    Checksum:     $(cat SHA256SUMS)"
+echo "    Size:         ${ISO_SIZE_MB} MB (${ISO_SIZE_BYTES} bytes)"
+echo "    Checksum:     $(cat SHA256SUMS.txt)"
 echo "    To test:      ./scripts/test-qemu.sh"
 echo "======================================================================"

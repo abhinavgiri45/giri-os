@@ -4,6 +4,7 @@ set -e
 # ====================================================================
 # GIRI OS 0.1 "Genesis" — Live-Build Auto Configuration Script
 # Target: Debian 12 (Bookworm) amd64 Hybrid Live/Installer ISO
+# Founder: Abhinav Giri | Tagline: One System. Infinite Possibilities.
 # ====================================================================
 
 lb config noauto \
@@ -11,7 +12,7 @@ lb config noauto \
     --architectures amd64 \
     --archive-areas "main contrib non-free non-free-firmware" \
     --binary-images iso-hybrid \
-    --bootloader grub-efi \
+    --bootloader syslinux \
     --grub-theme "/usr/share/grub/themes/giri" \
     --linux-flavours amd64 \
     --memtest memtest86+ \
@@ -19,6 +20,15 @@ lb config noauto \
     --iso-preparer "Abhinav Giri <lead@girios.org>" \
     --iso-publisher "Giri OS Open Source Project; https://girios.org" \
     --iso-volume "GIRI_OS_01_GENESIS" \
+    --mirror-bootstrap "http://deb.debian.org/debian/" \
+    --mirror-chroot "http://deb.debian.org/debian/" \
+    --mirror-chroot-security "http://security.debian.org/debian-security/" \
+    --mirror-binary "http://deb.debian.org/debian/" \
+    --mirror-binary-security "http://security.debian.org/debian-security/" \
+    --parent-mirror-bootstrap "http://deb.debian.org/debian/" \
+    --parent-mirror-chroot "http://deb.debian.org/debian/" \
+    --parent-mirror-binary "http://deb.debian.org/debian/" \
+    --keyring-packages debian-archive-keyring \
     --apt-indices false \
     --apt-recommends true \
     --security true \

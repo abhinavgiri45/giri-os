@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Install Giri OS 0.1 Genesis
+GenericName=System Installer
+Comment=Install Giri OS permanently to your computer or virtual disk
+Exec=sudo -E calamares
+Icon=calamares
+Terminal=false
+Categories=System;
+StartupNotify=true

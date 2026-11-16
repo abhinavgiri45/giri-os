@@ -4,6 +4,7 @@ set -e
 # ====================================================================
 # GIRI OS 0.1 "Genesis" — Live Chroot Configuration Hook
 # Executed inside the live environment before squashfs creation
+# Founder: Abhinav Giri | Tagline: One System. Infinite Possibilities.
 # ====================================================================
 
 echo ">>> [Giri OS] Configuring System Branding & Live User Environment..."
@@ -53,7 +54,45 @@ if [ -f /usr/share/giri-space/session/giri-session ]; then
     ln -sf /usr/share/giri-space/session/giri-session /usr/bin/giri-session
 fi
 
+# 7. Symlink All Giri Core Utilities to /usr/bin/
+if [ -f /usr/share/giri-space/control-center/control_center.py ]; then
+    chmod +x /usr/share/giri-space/control-center/control_center.py
+    ln -sf /usr/share/giri-space/control-center/control_center.py /usr/bin/giri-control
+fi
+
+if [ -f /usr/lib/giri/hardware/giri-hw/detector.py ]; then
+    chmod +x /usr/lib/giri/hardware/giri-hw/detector.py
+    ln -sf /usr/lib/giri/hardware/giri-hw/detector.py /usr/bin/giri-hw
+fi
+
+if [ -f /usr/lib/giri/compatibility/giri-bridge/runner.py ]; then
+    chmod +x /usr/lib/giri/compatibility/giri-bridge/runner.py
+    ln -sf /usr/lib/giri/compatibility/giri-bridge/runner.py /usr/bin/giri-bridge
+fi
+
+if [ -f /usr/lib/giri/gaming/giri-gaming/governor.py ]; then
+    chmod +x /usr/lib/giri/gaming/giri-gaming/governor.py
+    ln -sf /usr/lib/giri/gaming/giri-gaming/governor.py /usr/bin/giri-game
+fi
+
+if [ -f /usr/lib/giri/updater/giri-update/client.py ]; then
+    chmod +x /usr/lib/giri/updater/giri-update/client.py
+    ln -sf /usr/lib/giri/updater/giri-update/client.py /usr/bin/giri-update
+fi
+
+if [ -f /usr/lib/giri/first-boot/first_boot_wizard.py ]; then
+    chmod +x /usr/lib/giri/first-boot/first_boot_wizard.py
+    ln -sf /usr/lib/giri/first-boot/first_boot_wizard.py /usr/bin/giri-firstboot
+fi
+
+# 8. Setup Desktop Entries & Live User Desktop Icons
 mkdir -p /usr/share/xsessions/
 cp -f /usr/share/giri-space/session/*.desktop /usr/share/xsessions/ || true
+
+mkdir -p /home/giri/Desktop
+if [ -d /etc/skel/Desktop ]; then
+    cp -rf /etc/skel/Desktop/* /home/giri/Desktop/ || true
+fi
+chown -R giri:users /home/giri/Desktop || true
 
 echo ">>> [Giri OS] Chroot configuration completed successfully."

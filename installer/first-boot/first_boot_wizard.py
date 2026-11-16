@@ -195,7 +195,7 @@ class GiriFirstBootWizard(tk.Tk):
             "built for high performance, gaming capabilities, deep Windows application compatibility,\n"
             "and long-term reliability.\n\n"
             "Founder & Lead Architect: Abhinav Giri\n"
-            "Base System: Debian GNU/Linux (Bookworm / Trixie Foundation)\n\n"
+            "Base System: Debian GNU/Linux 12 (Bookworm Foundation)\n\n"
             "This initial setup wizard will help you configure language, input methods, accounts,\n"
             "and desktop visual profiles in just a few minutes."
         )

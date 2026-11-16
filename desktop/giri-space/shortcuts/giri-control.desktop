@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Giri Control Center
+Comment=Giri OS Settings, Display Profiles, and Wallpaper Manager
+Exec=python3 /usr/share/giri-space/control-center/control_center.py
+Icon=preferences-system
+Terminal=false
+Categories=Settings;DesktopSettings;
+StartupNotify=true
