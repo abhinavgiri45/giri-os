@@ -9,6 +9,13 @@ set -e
 
 echo ">>> [Giri OS] Configuring System Branding & Live User Environment..."
 
+# 0. Configure Official Production APT Sources for Bookworm
+cat << 'EOF' > /etc/apt/sources.list
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+EOF
+
 # 1. Enable 32-bit Multiarch for Wine Application Compatibility
 dpkg --add-architecture i386 || true
 
