@@ -15,6 +15,19 @@ mesa-vulkan-drivers
 i965-va-driver
 intel-media-va-driver
 
+# GTK3 & Desktop Schema Backends
+dconf-gsettings-backend
+dconf-service
+dconf-cli
+gsettings-desktop-schemas
+libgtk-3-common
+libgtk-3-0
+libglib2.0-bin
+desktop-file-utils
+shared-mime-info
+xdg-utils
+policykit-1-gnome
+
 # Window Manager & Compositor
 openbox
 picom
