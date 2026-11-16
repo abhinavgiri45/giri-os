@@ -81,6 +81,8 @@ jobs:
             python3-tk \
             python3-psutil \
             python3-pil \
+            python3-pil.imagetk \
+            xvfb \
             qemu-system-x86 \
             ovmf \
             file \
@@ -88,8 +90,9 @@ jobs:
 
       - name: Run Giri OS Pre-Flight Test Suite
         run: |
-          echo "[+] Executing automated unit & integration test suite..."
-          python3 tests/test_giri_suite.py
+          echo "[+] Executing automated unit & integration test suite under Xvfb..."
+          mkdir -p releases
+          xvfb-run -a python3 tests/test_giri_suite.py
 
       - name: Compile Giri OS 0.1 Genesis Bootable ISO
         run: |
@@ -162,6 +165,7 @@ jobs:
       - name: Generate Build & Verification Report
         if: always()
         run: |
+          mkdir -p releases
           ISO_FILE="releases/giri-os-0.1-genesis-amd64.iso"
           SHA_FILE="releases/SHA256SUMS.txt"
           BOOT_STATUS_FILE="releases/BOOT-TEST-STATUS.txt"
