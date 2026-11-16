@@ -1,6 +1,7 @@
 """
 Giri OS GRUB Theme Asset Generator
-Generates pixel-perfect PNG assets for GRUB gfxmenu without external dependencies (pure Python struct + zlib).
+Generates pixel-perfect PNG assets for GRUB gfxmenu featuring the official
+four-pane geometric window logo (2x2 symmetrical formation).
 """
 
 import os
@@ -9,10 +10,6 @@ import zlib
 import math
 
 def create_png(width, height, pixel_func, output_path):
-    """
-    Creates a valid 24-bit RGB or 32-bit RGBA PNG file.
-    pixel_func(x, y) returns (r, g, b, a) with 0-255 values.
-    """
     raw_data = bytearray()
     for y in range(height):
         raw_data.append(0)  # Filter type 0 (None)
@@ -25,26 +22,23 @@ def create_png(width, height, pixel_func, output_path):
     png = bytearray()
     png.extend(b"\x89PNG\r\n\x1a\n")
     
-    # IHDR chunk
+    # IHDR
     ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    ihdr_crc = zlib.crc32(b"IHDR" + ihdr_data)
     png.extend(struct.pack(">I", 13))
     png.extend(b"IHDR")
     png.extend(ihdr_data)
-    png.extend(struct.pack(">I", ihdr_crc))
+    png.extend(struct.pack(">I", zlib.crc32(b"IHDR" + ihdr_data)))
     
-    # IDAT chunk
-    idat_crc = zlib.crc32(b"IDAT" + compressed)
+    # IDAT
     png.extend(struct.pack(">I", len(compressed)))
     png.extend(b"IDAT")
     png.extend(compressed)
-    png.extend(struct.pack(">I", idat_crc))
+    png.extend(struct.pack(">I", zlib.crc32(b"IDAT" + compressed)))
     
-    # IEND chunk
-    iend_crc = zlib.crc32(b"IEND")
+    # IEND
     png.extend(struct.pack(">I", 0))
     png.extend(b"IEND")
-    png.extend(struct.pack(">I", iend_crc))
+    png.extend(struct.pack(">I", zlib.crc32(b"IEND")))
     
     with open(output_path, "wb") as f:
         f.write(png)
@@ -56,57 +50,51 @@ def generate_assets(out_dir):
     bg_path = os.path.join(out_dir, "background.png")
     print(f"Generating {bg_path} (1920x1080)...")
     def bg_pixel(x, y):
-        # Center glow around (960, 500)
+        # Clean minimalist deep navy/black gradient
         dx = (x - 960) / 960.0
         dy = (y - 500) / 540.0
         dist = math.sqrt(dx*dx + dy*dy)
         
-        # Deep space dark gradient
-        base_r = int(max(4, 18 - dist * 12))
-        base_g = int(max(7, 24 - dist * 16))
-        base_b = int(max(18, 55 - dist * 35))
-        
-        # Subtle orbital glow tint
-        if dist < 0.6:
-            factor = (0.6 - dist) / 0.6
-            base_r = int(min(255, base_r + 20 * factor))
-            base_g = int(min(255, base_g + 50 * factor))
-            base_b = int(min(255, base_b + 90 * factor))
-            
+        base_r = int(max(6, 16 - dist * 10))
+        base_g = int(max(10, 22 - dist * 14))
+        base_b = int(max(24, 48 - dist * 28))
         return (base_r, base_g, base_b, 255)
         
     create_png(1920, 1080, bg_pixel, bg_path)
     
-    # 2. Logo image (440x90)
+    # 2. Header Logo with 2x2 Geometric Window Pane (440x90)
     logo_path = os.path.join(out_dir, "logo.png")
     print(f"Generating {logo_path}...")
     def logo_pixel(x, y):
-        # Emblazoned header badge with electric blue and violet gradient
-        if x < 4 or x >= 436 or y < 4 or y >= 86:
+        # Left symbol: x from 20 to 88, y from 11 to 79 (68x68 total, 8px gap)
+        # Panes are 30x30 with 8px gap
+        if 20 <= x <= 88 and 11 <= y <= 79:
+            # Top-left pane: x in [20, 50], y in [11, 41]
+            if 20 <= x <= 50 and 11 <= y <= 41:
+                return (0, 210, 255, 255)  # #00D2FF
+            # Top-right pane: x in [58, 88], y in [11, 41]
+            elif 58 <= x <= 88 and 11 <= y <= 41:
+                return (0, 102, 255, 255)  # #0066FF
+            # Bottom-left pane: x in [20, 50], y in [49, 79]
+            elif 20 <= x <= 50 and 49 <= y <= 79:
+                return (121, 40, 202, 255) # #7928CA
+            # Bottom-right pane: x in [58, 88], y in [49, 79]
+            elif 58 <= x <= 88 and 49 <= y <= 79:
+                return (168, 85, 247, 255) # #A855F7
             return (0, 0, 0, 0)
-        # Inner fill
-        t = x / 440.0
-        r = int(12 + 15 * t)
-        g = int(22 + 40 * t)
-        b = int(48 + 90 * t)
-        return (r, g, b, 230)
+            
+        return (0, 0, 0, 0)
     create_png(440, 90, logo_pixel, logo_path)
     
-    # 3. Selection Box Pixmaps (Used for active menu item highlight)
+    # 3. Selection Box Pixmaps
     for part in ["c", "n", "s", "w", "e", "nw", "ne", "sw", "se"]:
         p_path = os.path.join(out_dir, f"select_box_{part}.png")
-        def select_pixel(x, y):
-            # Electric cyan-violet selection highlight with 50% transparency
-            return (18, 120, 220, 200)
-        create_png(32, 32, select_pixel, p_path)
+        create_png(32, 32, lambda x, y: (0, 102, 255, 180), p_path)
 
-    # 4. Menu Box Pixmaps (Background container for boot list)
+    # 4. Menu Box Pixmaps
     for part in ["c", "n", "s", "w", "e", "nw", "ne", "sw", "se"]:
         m_path = os.path.join(out_dir, f"menu_box_{part}.png")
-        def menu_pixel(x, y):
-            # Subtle deep navy translucent panel
-            return (10, 16, 32, 175)
-        create_png(32, 32, menu_pixel, m_path)
+        create_png(32, 32, lambda x, y: (12, 18, 36, 190), m_path)
 
     # 5. Progress Bar
     pbar_path = os.path.join(out_dir, "progress_bar_c.png")

@@ -4,9 +4,10 @@ Giri Space — Desktop Environment Prototype
 Author: Abhinav Giri / Giri OS Core Engineering Team
 License: GPL-3.0-or-later
 
-Implements the official Giri Space desktop shell:
+Official Giri Space desktop shell:
+- Four-pane geometric window brand emblem
 - Giri Top Bar (Clock, Workspaces, Quick Status, Quick Settings)
-- Giri Dock (Glassmorphic floating application dock with active indicators)
+- Giri Dock (Floating application dock with active indicators)
 - Giri Launch (Categorized high-speed application search launcher)
 - Giri Spaces (Virtual workspaces switcher)
 - Giri Profile integration (Classic vs Modern visual rendering modes)
@@ -58,14 +59,16 @@ class GiriSpaceDesktop(tk.Tk):
         self.quick_settings_open = False
         self.running_apps = {"Giri Files", "Giri Control"}
 
-        # Palette definition
+        # Official Color Palette
         self.colors = {
-            "bg_dark": "#050811",
+            "bg_dark": "#060a14",
             "topbar_bg": "#0a1020",
             "dock_bg": "#0c1428",
             "dock_border": "#1c2b4d",
-            "accent_cyan": "#00d2ff",
-            "accent_violet": "#7928ca",
+            "pane_tl": "#00d2ff",   # Electric Cyan-Blue
+            "pane_tr": "#0066ff",   # Vivid Electric Blue
+            "pane_bl": "#7928ca",   # Electric Violet
+            "pane_br": "#a855f7",   # Radiant Violet-Magenta
             "text_light": "#e2e8f0",
             "text_muted": "#8ea4c8",
         }
@@ -74,7 +77,6 @@ class GiriSpaceDesktop(tk.Tk):
         self.start_clock_timer()
 
         if self.non_interactive:
-            # Self-verification mode
             self.withdraw()
 
     def setup_desktop(self):
@@ -100,29 +102,38 @@ class GiriSpaceDesktop(tk.Tk):
         w = self.winfo_width() or 1120
         h = self.winfo_height() or 720
 
-        # Background gradient rings
         cx, cy = w // 2, h // 2
-        # Concentric orbital rings
-        self.canvas.create_oval(cx - 360, cy - 140, cx + 360, cy + 140, outline="#16223d", width=1.5, dash=(6, 12))
-        self.canvas.create_oval(cx - 260, cy - 95, cx + 260, cy + 95, outline="#00d2ff", width=2, dash=(160, 20, 40, 10))
-        self.canvas.create_oval(cx - 160, cy - 60, cx + 160, cy + 60, outline="#7928ca", width=1.5)
 
-        # Center Giri Orbit Logo Watermark
+        # Draw Official Four-Pane Geometric Window Symbol (Center Watermark)
+        # Symmetrical 2x2 formation: 120x120 total, 10px spacing
+        pane_w = 54
+        gap = 12
+        x0 = cx - (pane_w * 2 + gap) // 2
+        y0 = cy - 70
+        x1 = x0 + pane_w + gap
+        y1 = y0 + pane_w + gap
+
+        # 4 Geometric Panes (Flat vector design)
+        self.canvas.create_rectangle(x0, y0, x0 + pane_w, y0 + pane_w, fill=self.colors["pane_tl"], outline="")
+        self.canvas.create_rectangle(x1, y0, x1 + pane_w, y0 + pane_w, fill=self.colors["pane_tr"], outline="")
+        self.canvas.create_rectangle(x0, y1, x0 + pane_w, y1 + pane_w, fill=self.colors["pane_bl"], outline="")
+        self.canvas.create_rectangle(x1, y1, x1 + pane_w, y1 + pane_w, fill=self.colors["pane_br"], outline="")
+
+        # Wordmark: GIRI OS
         self.canvas.create_text(
-            cx, cy - 20,
+            cx, cy + 70,
             text="GIRI OS",
             font=("Segoe UI", 32, "bold"),
-            fill="#10182c"
+            fill="#ffffff"
         )
         self.canvas.create_text(
-            cx, cy + 24,
+            cx, cy + 106,
             text="ONE SYSTEM. INFINITE POSSIBILITIES.",
-            font=("Segoe UI", 11, "bold"),
-            fill="#182442"
+            font=("Segoe UI", 10, "bold"),
+            fill="#64748b"
         )
 
         # Profile indicator on wallpaper
-        profile_label = f"PROFILE: GIRI {self.profile.upper()} • {self.colors['accent_cyan']}"
         self.canvas.create_text(
             w - 18, h - 90,
             text=f"Giri OS 0.1 Genesis  •  {self.profile.capitalize()} Mode",
@@ -135,13 +146,13 @@ class GiriSpaceDesktop(tk.Tk):
         self.topbar = tk.Frame(self, bg=self.colors["topbar_bg"], height=38)
         self.topbar.place(x=0, y=0, relwidth=1.0, height=38)
 
-        # Left: Giri Launcher Trigger
+        # Left: Giri Launcher Trigger with four-pane window glyph
         self.btn_logo = tk.Button(
             self.topbar,
-            text=" 🪐 GIRI ",
+            text=" ⊞ GIRI ",
             font=("Segoe UI", 10, "bold"),
             bg="#101a33",
-            fg=self.colors["accent_cyan"],
+            fg=self.colors["pane_tl"],
             activebackground="#162447",
             activeforeground="#ffffff",
             relief="flat",
@@ -185,31 +196,28 @@ class GiriSpaceDesktop(tk.Tk):
         self.right_frame = tk.Frame(self.topbar, bg=self.colors["topbar_bg"])
         self.right_frame.pack(side="right", padx=12)
 
-        # Hardware Tier Pill
         tier_text = "CLASSIC" if self.profile == "classic" else "MODERN"
         self.lbl_tier = tk.Label(
             self.right_frame,
             text=f" {tier_text} ",
             font=("Segoe UI", 8, "bold"),
-            bg="#0077ff" if self.profile == "modern" else "#1b2a47",
+            bg="#0066ff" if self.profile == "modern" else "#1b2a47",
             fg="#ffffff" if self.profile == "modern" else "#00d2ff"
         )
         self.lbl_tier.pack(side="left", padx=6)
 
-        # System Metrics Badges
-        self.lbl_cpu = tk.Label(self.right_frame, text="CPU: 6%", font=("Segoe UI", 9), fg="#8ea4c8", bg=self.colors["topbar_bg"])
+        self.lbl_cpu = tk.Label(self.right_frame, text="CPU: 5%", font=("Segoe UI", 9), fg="#8ea4c8", bg=self.colors["topbar_bg"])
         self.lbl_cpu.pack(side="left", padx=6)
 
-        self.lbl_ram = tk.Label(self.right_frame, text="RAM: 420 MB", font=("Segoe UI", 9), fg="#8ea4c8", bg=self.colors["topbar_bg"])
+        self.lbl_ram = tk.Label(self.right_frame, text="RAM: 410 MB", font=("Segoe UI", 9), fg="#8ea4c8", bg=self.colors["topbar_bg"])
         self.lbl_ram.pack(side="left", padx=6)
 
-        # Quick Settings Button
         self.btn_qs = tk.Button(
             self.right_frame,
             text=" ⚙️ ",
             font=("Segoe UI", 10),
             bg="#101a33",
-            fg=self.colors["accent_cyan"],
+            fg=self.colors["pane_tl"],
             activebackground="#1a274c",
             relief="flat",
             command=self.toggle_quick_settings
@@ -217,9 +225,6 @@ class GiriSpaceDesktop(tk.Tk):
         self.btn_qs.pack(side="left", padx=4)
 
     def setup_dock(self):
-        """
-        Creates the floating Giri Dock at the bottom center of the screen.
-        """
         dock_width = 440
         dock_height = 58
         self.dock_frame = tk.Frame(
@@ -231,7 +236,7 @@ class GiriSpaceDesktop(tk.Tk):
         self.dock_frame.place(relx=0.5, rely=1.0, anchor="s", y=-14, width=dock_width, height=dock_height)
 
         dock_items = [
-            ("🪐", "Giri Launch", self.toggle_launcher),
+            ("⊞", "Giri Launch", self.toggle_launcher),
             ("📁", "Giri Files", lambda: self.launch_app("Giri Files")),
             ("🌉", "Giri Bridge", lambda: self.launch_app("Giri Bridge")),
             ("🎮", "Giri Gaming", lambda: self.launch_app("Giri Gaming")),
@@ -247,45 +252,39 @@ class GiriSpaceDesktop(tk.Tk):
             btn = tk.Button(
                 f,
                 text=icon,
-                font=("Segoe UI", 15),
+                font=("Segoe UI", 14 if icon == "⊞" else 15),
                 bg=self.colors["dock_bg"],
-                fg="#ffffff",
+                fg=self.colors["pane_tl"] if icon == "⊞" else "#ffffff",
                 activebackground="#16223d",
-                activeforeground=self.colors["accent_cyan"],
+                activeforeground=self.colors["pane_tl"],
                 relief="flat",
                 command=action
             )
             btn.pack(side="top")
 
-            # Active app indicator dot
             is_running = name in self.running_apps
             dot = tk.Label(
                 f,
                 text="•" if is_running else " ",
                 font=("Segoe UI", 8),
-                fg=self.colors["accent_cyan"],
+                fg=self.colors["pane_tl"],
                 bg=self.colors["dock_bg"]
             )
             dot.pack(side="bottom")
 
     def setup_launcher(self):
-        """
-        High-speed search overlay launcher.
-        """
         self.launcher_frame = tk.Frame(
             self,
             bg="#0a1020",
-            highlightbackground=self.colors["accent_cyan"],
+            highlightbackground=self.colors["pane_tl"],
             highlightthickness=1,
             padx=16,
             pady=16
         )
-        # Position at top-left below topbar
         self.launcher_frame.place(x=8, y=42, width=380, height=480)
-        self.launcher_frame.place_forget()  # Initially hidden
+        self.launcher_frame.place_forget()
 
-        # Search box
-        lbl_s = tk.Label(self.launcher_frame, text="Search Giri OS...", font=("Segoe UI", 10, "bold"), fg=self.colors["accent_cyan"], bg="#0a1020")
+        lbl_s = tk.Label(self.launcher_frame, text="Search Giri OS...", font=("Segoe UI", 10, "bold"), fg=self.colors["pane_tl"], bg="#0a1020")
         lbl_s.pack(anchor="w")
 
         self.search_entry = tk.Entry(
@@ -299,7 +298,6 @@ class GiriSpaceDesktop(tk.Tk):
         self.search_entry.pack(fill="x", pady=(4, 12))
         self.search_entry.bind("<KeyRelease>", self.filter_apps)
 
-        # Categorized application list
         self.app_list_frame = tk.Frame(self.launcher_frame, bg="#0a1020")
         self.app_list_frame.pack(fill="both", expand=True)
 
@@ -344,9 +342,6 @@ class GiriSpaceDesktop(tk.Tk):
         self.populate_apps(filtered)
 
     def setup_quick_settings(self):
-        """
-        Quick Settings popover panel.
-        """
         self.qs_frame = tk.Frame(
             self,
             bg="#0c1428",
@@ -360,7 +355,6 @@ class GiriSpaceDesktop(tk.Tk):
 
         tk.Label(self.qs_frame, text="Quick Settings", font=("Segoe UI", 12, "bold"), fg="#ffffff", bg="#0c1428").pack(anchor="w", pady=(0, 10))
 
-        # Toggles grid
         toggles = [
             ("📶 Wi-Fi: Connected", True),
             ("🎮 Game Mode: Ready", True),
@@ -375,9 +369,9 @@ class GiriSpaceDesktop(tk.Tk):
                 grid_f,
                 text=text,
                 font=("Segoe UI", 9, "bold" if active else "normal"),
-                bg="#0077ff" if active else "#16223d",
+                bg="#0066ff" if active else "#16223d",
                 fg="#ffffff" if active else "#8ea4c8",
-                activebackground="#0099ff",
+                activebackground="#0088ff",
                 relief="flat",
                 padx=8,
                 pady=8
@@ -386,13 +380,12 @@ class GiriSpaceDesktop(tk.Tk):
         grid_f.grid_columnconfigure(0, weight=1)
         grid_f.grid_columnconfigure(1, weight=1)
 
-        # Profile Switcher
         tk.Label(self.qs_frame, text="Visual Profile:", font=("Segoe UI", 10, "bold"), fg="#8ea4c8", bg="#0c1428").pack(anchor="w", pady=(12, 4))
         p_frame = tk.Frame(self.qs_frame, bg="#0c1428")
         p_frame.pack(fill="x")
 
         tk.Button(p_frame, text="Giri Classic", font=("Segoe UI", 9), bg="#1b2a47" if self.profile == "classic" else "#10182c", fg="#00d2ff" if self.profile == "classic" else "#8ea4c8", relief="flat", command=lambda: self.switch_profile("classic")).pack(side="left", expand=True, fill="x", padx=2)
-        tk.Button(p_frame, text="Giri Modern", font=("Segoe UI", 9), bg="#0077ff" if self.profile == "modern" else "#10182c", fg="#ffffff" if self.profile == "modern" else "#8ea4c8", relief="flat", command=lambda: self.switch_profile("modern")).pack(side="left", expand=True, fill="x", padx=2)
+        tk.Button(p_frame, text="Giri Modern", font=("Segoe UI", 9), bg="#0066ff" if self.profile == "modern" else "#10182c", fg="#ffffff" if self.profile == "modern" else "#8ea4c8", relief="flat", command=lambda: self.switch_profile("modern")).pack(side="left", expand=True, fill="x", padx=2)
 
     def toggle_launcher(self):
         if self.launcher_open:
@@ -430,7 +423,7 @@ class GiriSpaceDesktop(tk.Tk):
         tier_text = "CLASSIC" if self.profile == "classic" else "MODERN"
         self.lbl_tier.config(
             text=f" {tier_text} ",
-            bg="#0077ff" if self.profile == "modern" else "#1b2a47",
+            bg="#0066ff" if self.profile == "modern" else "#1b2a47",
             fg="#ffffff" if self.profile == "modern" else "#00d2ff"
         )
         self.draw_wallpaper()

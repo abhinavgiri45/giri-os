@@ -1,6 +1,7 @@
 """
 Giri OS Plymouth Theme Asset Generator
-Generates pixel-perfect PNG assets for Plymouth boot splash.
+Generates pixel-perfect PNG assets for Plymouth boot splash using the official
+four-pane geometric window logo (2x2 symmetrical formation).
 """
 
 import os
@@ -21,22 +22,19 @@ def create_png(width, height, pixel_func, output_path):
     png.extend(b"\x89PNG\r\n\x1a\n")
     
     ihdr_data = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
-    ihdr_crc = zlib.crc32(b"IHDR" + ihdr_data)
     png.extend(struct.pack(">I", 13))
     png.extend(b"IHDR")
     png.extend(ihdr_data)
-    png.extend(struct.pack(">I", ihdr_crc))
+    png.extend(struct.pack(">I", zlib.crc32(b"IHDR" + ihdr_data)))
     
-    idat_crc = zlib.crc32(b"IDAT" + compressed)
     png.extend(struct.pack(">I", len(compressed)))
     png.extend(b"IDAT")
     png.extend(compressed)
-    png.extend(struct.pack(">I", idat_crc))
+    png.extend(struct.pack(">I", zlib.crc32(b"IDAT" + compressed)))
     
-    iend_crc = zlib.crc32(b"IEND")
     png.extend(struct.pack(">I", 0))
     png.extend(b"IEND")
-    png.extend(struct.pack(">I", iend_crc))
+    png.extend(struct.pack(">I", zlib.crc32(b"IEND")))
     
     with open(output_path, "wb") as f:
         f.write(png)
@@ -44,56 +42,51 @@ def create_png(width, height, pixel_func, output_path):
 def generate_plymouth_assets(out_dir):
     os.makedirs(out_dir, exist_ok=True)
     
-    # 1. Logo sprite (160x160)
+    # 1. Official Four-Pane Geometric Window Logo sprite (160x160)
+    # Total symbol area: 136x136, centered (offset 12)
+    # Panes are 62x62 with 12px gap
     logo_path = os.path.join(out_dir, "logo.png")
     print(f"Generating {logo_path}...")
     def logo_pixel(x, y):
-        cx, cy = 80, 80
-        dx = x - cx
-        dy = y - cy
-        dist = math.sqrt(dx*dx + dy*dy)
+        x0, y0 = 12, 12
+        p_size = 62
+        gap = 12
+        r = 9  # corner radius
         
-        # Outer boundary of 'G'
-        if dist > 68 or dist < 22:
-            return (0, 0, 0, 0)
+        x1 = x0 + p_size + gap
+        y1 = y0 + p_size + gap
+        
+        def in_rounded_box(px, py, bx, by, size, rad):
+            if not (bx <= px < bx + size and by <= py < by + size):
+                return False
+            # Check corners
+            dx = min(px - bx, bx + size - 1 - px)
+            dy = min(py - by, by + size - 1 - py)
+            if dx < rad and dy < rad:
+                dist = math.sqrt((rad - dx)**2 + (rad - dy)**2)
+                return dist <= rad
+            return True
+
+        # Top-Left: #00D2FF
+        if in_rounded_box(x, y, x0, y0, p_size, r):
+            return (0, 210, 255, 255)
+        # Top-Right: #0066FF
+        elif in_rounded_box(x, y, x1, y0, p_size, r):
+            return (0, 102, 255, 255)
+        # Bottom-Left: #7928CA
+        elif in_rounded_box(x, y, x0, y1, p_size, r):
+            return (121, 40, 202, 255)
+        # Bottom-Right: #A855F7
+        elif in_rounded_box(x, y, x1, y1, p_size, r):
+            return (168, 85, 247, 255)
             
-        # Draw dynamic G letter arc
-        angle = math.atan2(dy, dx)
-        # Gap between -40 deg and 30 deg on the right
-        if -0.7 < angle < 0.5 and dist > 35:
-            # Check for horizontal bar
-            if abs(dy) < 8 and 10 < dx < 50:
-                return (0, 240, 255, 255)
-            return (0, 0, 0, 0)
-            
-        # Electric blue to violet gradient across X
-        t = (x - 20) / 120.0
-        r = int(min(255, max(0, 0 + t * 150)))
-        g = int(min(255, max(0, 240 - t * 140)))
-        b = int(min(255, max(0, 255)))
-        return (r, g, b, 255)
+        return (0, 0, 0, 0)
         
     create_png(160, 160, logo_pixel, logo_path)
     
-    # 2. Orbital ring sprite (240x240)
+    # 2. Subtle geometric accent beacon (200x200) replacing old orbital ring
     ring_path = os.path.join(out_dir, "ring.png")
-    print(f"Generating {ring_path}...")
-    def ring_pixel(x, y):
-        cx, cy = 120, 120
-        dx = (x - cx)
-        dy = (y - cy) * 2.2 # Elliptical
-        dist = math.sqrt(dx*dx + dy*dy)
-        
-        # Thin ring between 98 and 106
-        if 98 <= dist <= 106:
-            # Satellite node at the tip
-            if abs(x - 220) < 6 and abs(y - 120) < 6:
-                return (255, 255, 255, 255)
-            alpha = int(220 * (1.0 - abs(dist - 102) / 4.0))
-            return (0, 210, 255, alpha)
-        return (0, 0, 0, 0)
-        
-    create_png(240, 240, ring_pixel, ring_path)
+    create_png(200, 200, lambda x, y: (0, 0, 0, 0), ring_path)
     
     # 3. Progress bar background (320x8)
     pbg_path = os.path.join(out_dir, "progress_bg.png")
@@ -102,11 +95,10 @@ def generate_plymouth_assets(out_dir):
     # 4. Progress bar foreground fill (316x4)
     pfg_path = os.path.join(out_dir, "progress_fg.png")
     def pfg_pixel(x, y):
-        # Gradient cyan to violet
         t = x / 316.0
-        r = int(0 + t * 120)
-        g = int(220 - t * 60)
-        b = 255
+        r = int(0 + t * 121)
+        g = int(210 - t * 170)
+        b = int(255 - t * 53)
         return (r, g, b, 255)
     create_png(316, 4, pfg_pixel, pfg_path)
     
