@@ -105,30 +105,36 @@ class TestGiriOSCore(unittest.TestCase):
     def test_07_wallpaper_collection(self):
         wp_dir = os.path.join(ROOT_DIR, "branding", "wallpapers")
         manifest_path = os.path.join(wp_dir, "wallpapers.json")
+        meta_path = os.path.join(wp_dir, "wallpaper-metadata.json")
         self.assertTrue(os.path.isfile(manifest_path))
+        self.assertTrue(os.path.isfile(meta_path))
 
-        with open(manifest_path, "r") as f:
+        with open(manifest_path, "r", encoding="utf-8") as f:
             manifest = json.load(f)
 
-        self.assertGreaterEqual(len(manifest), 10)
+        self.assertEqual(len(manifest), 12, "Must contain exactly 12 official wallpapers")
 
-        # Confirm giri-origin is default
-        default_wp = [w for w in manifest if w.get("is_default")]
-        self.assertEqual(len(default_wp), 1)
-        self.assertEqual(default_wp[0]["filename"], "giri-origin.png")
+        # Confirm official default wallpapers exist
+        filenames = [w["filename"] for w in manifest]
+        self.assertIn("giri-os-default-dark.png", filenames)
+        self.assertIn("giri-os-default-light.png", filenames)
+        self.assertIn("giri-origin.png", filenames)
 
-        # Verify each image file exists, is valid PNG, and has 16:9 ratio
+        # Verify each image file exists, is 3840x2160 4K UHD, and has a 384x216 thumbnail
         for wp in manifest:
             img_path = os.path.join(wp_dir, wp["filename"])
             self.assertTrue(os.path.isfile(img_path), f"Missing wallpaper: {img_path}")
 
             with Image.open(img_path) as im:
                 w, h = im.size
-                ratio = w / h
-                self.assertAlmostEqual(ratio, 16.0 / 9.0, delta=0.02)
+                self.assertEqual((w, h), (3840, 2160), f"Wallpaper {wp['filename']} must be 3840x2160")
+                self.assertAlmostEqual(w / h, 16.0 / 9.0, delta=0.01)
 
             thumb_path = os.path.join(wp_dir, "thumbnails", wp["filename"])
             self.assertTrue(os.path.isfile(thumb_path), f"Missing thumbnail: {thumb_path}")
+            with Image.open(thumb_path) as tim:
+                tw, th = tim.size
+                self.assertEqual((tw, th), (384, 216), f"Thumbnail {wp['filename']} must be 384x216")
 
     def test_08_wine_runner_status(self):
         runner = WineRunner()
@@ -145,6 +151,23 @@ class TestGiriOSCore(unittest.TestCase):
         for mod in required_modules:
             mod_file = os.path.join(ROOT_DIR, "installer", "calamares", "modules", mod)
             self.assertTrue(os.path.isfile(mod_file), f"Missing Calamares module: {mod}")
+
+    def test_10_theme_wallpaper_switching(self):
+        desktop = GiriSpaceDesktop(non_interactive=True)
+        # Default is dark theme -> giri-os-default-dark.png
+        self.assertIn("giri-os-default-dark.png", desktop.wallpaper_config.get("current_wallpaper", ""))
+
+        # Switch to light theme -> auto-switches to giri-os-default-light.png
+        desktop.switch_theme("light")
+        self.assertEqual(desktop.theme, "light")
+        self.assertIn("giri-os-default-light.png", desktop.wallpaper_config.get("current_wallpaper", ""))
+
+        # Switch back to dark theme -> auto-switches to giri-os-default-dark.png
+        desktop.switch_theme("dark")
+        self.assertEqual(desktop.theme, "dark")
+        self.assertIn("giri-os-default-dark.png", desktop.wallpaper_config.get("current_wallpaper", ""))
+
+        desktop.destroy()
 
 
 if __name__ == "__main__":

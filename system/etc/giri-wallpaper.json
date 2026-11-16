@@ -1,13 +1,16 @@
 {
-  "current_wallpaper": "branding/wallpapers/giri-origin.png",
-  "current_name": "Giri Origin",
+  "current_wallpaper": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png",
+  "current_name": "Giri OS \u2014 Dark Edition",
+  "theme": "dark",
+  "auto_switch_theme": true,
+  "user_manually_selected": false,
   "mode": "Fill",
   "is_solid_color": false,
   "solid_color": "#050811",
   "per_space": {
-    "1": "branding/wallpapers/giri-origin.png",
-    "2": "branding/wallpapers/digital-dimensions.png",
-    "3": "branding/wallpapers/quantum.png",
-    "4": "branding/wallpapers/midnight-flow.png"
+    "1": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png",
+    "2": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png",
+    "3": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png",
+    "4": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png"
   }
 }

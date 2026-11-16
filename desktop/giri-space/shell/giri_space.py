@@ -87,10 +87,12 @@ class GiriSpaceDesktop(tk.Tk):
             self.withdraw()
 
     def _load_wallpaper_config(self):
-        default_wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
+        default_wp = os.path.join(WALLPAPER_DIR, "giri-os-default-dark.png")
+        if not os.path.isfile(default_wp):
+            default_wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
         if os.path.isfile(WALLPAPER_CONFIG):
             try:
-                with open(WALLPAPER_CONFIG, "r") as f:
+                with open(WALLPAPER_CONFIG, "r", encoding="utf-8") as f:
                     cfg = json.load(f)
                     if not os.path.isfile(cfg.get("current_wallpaper", "")):
                         cfg["current_wallpaper"] = default_wp
@@ -99,17 +101,28 @@ class GiriSpaceDesktop(tk.Tk):
                 pass
         return {
             "current_wallpaper": default_wp,
-            "current_name": "Giri Origin",
+            "current_name": "Giri OS — Dark Edition",
+            "theme": "dark",
+            "auto_switch_theme": True,
+            "user_manually_selected": False,
             "mode": "Fill",
             "is_solid_color": False,
             "solid_color": "#050811",
             "per_space": {
                 "1": default_wp,
-                "2": os.path.join(WALLPAPER_DIR, "digital-dimensions.png"),
-                "3": os.path.join(WALLPAPER_DIR, "quantum.png"),
-                "4": os.path.join(WALLPAPER_DIR, "midnight-flow.png")
+                "2": os.path.join(WALLPAPER_DIR, "giri-origin.png"),
+                "3": os.path.join(WALLPAPER_DIR, "infinite-flow.png"),
+                "4": os.path.join(WALLPAPER_DIR, "quantum-form.png")
             }
         }
+
+    def _save_wallpaper_config(self):
+        os.makedirs(os.path.dirname(WALLPAPER_CONFIG), exist_ok=True)
+        try:
+            with open(WALLPAPER_CONFIG, "w", encoding="utf-8") as f:
+                json.dump(self.wallpaper_config, f, indent=2)
+        except Exception as e:
+            print(f"Warning: Could not save wallpaper configuration: {e}")
 
     def setup_desktop(self):
         # 1. Background Wallpaper Canvas
@@ -462,12 +475,23 @@ class GiriSpaceDesktop(tk.Tk):
         grid_f.grid_columnconfigure(0, weight=1)
         grid_f.grid_columnconfigure(1, weight=1)
 
-        tk.Label(self.qs_frame, text="Visual Profile:", font=("Segoe UI", 10, "bold"), fg="#8ea4c8", bg="#0c1428").pack(anchor="w", pady=(12, 4))
+        tk.Label(self.qs_frame, text="Visual Profile:", font=("Segoe UI", 10, "bold"), fg="#8ea4c8", bg="#0c1428").pack(anchor="w", pady=(10, 4))
         p_frame = tk.Frame(self.qs_frame, bg="#0c1428")
         p_frame.pack(fill="x")
 
         tk.Button(p_frame, text="Giri Classic", font=("Segoe UI", 9), bg="#1b2a47" if self.profile == "classic" else "#10182c", fg="#00d2ff" if self.profile == "classic" else "#8ea4c8", relief="flat", command=lambda: self.switch_profile("classic")).pack(side="left", expand=True, fill="x", padx=2)
         tk.Button(p_frame, text="Giri Modern", font=("Segoe UI", 9), bg="#0066ff" if self.profile == "modern" else "#10182c", fg="#ffffff" if self.profile == "modern" else "#8ea4c8", relief="flat", command=lambda: self.switch_profile("modern")).pack(side="left", expand=True, fill="x", padx=2)
+
+        tk.Label(self.qs_frame, text="Theme Mode:", font=("Segoe UI", 10, "bold"), fg="#8ea4c8", bg="#0c1428").pack(anchor="w", pady=(10, 4))
+        t_frame = tk.Frame(self.qs_frame, bg="#0c1428")
+        t_frame.pack(fill="x")
+
+        cur_theme = self.wallpaper_config.get("theme", "dark")
+        self.btn_theme_dark = tk.Button(t_frame, text="🌙 Dark", font=("Segoe UI", 9, "bold" if cur_theme == "dark" else "normal"), bg="#1b2a47" if cur_theme == "dark" else "#10182c", fg="#00d2ff" if cur_theme == "dark" else "#8ea4c8", relief="flat", command=lambda: self.switch_theme("dark"))
+        self.btn_theme_dark.pack(side="left", expand=True, fill="x", padx=2)
+
+        self.btn_theme_light = tk.Button(t_frame, text="☀ Light", font=("Segoe UI", 9, "bold" if cur_theme == "light" else "normal"), bg="#e2e8f0" if cur_theme == "light" else "#10182c", fg="#0f172a" if cur_theme == "light" else "#8ea4c8", relief="flat", command=lambda: self.switch_theme("light"))
+        self.btn_theme_light.pack(side="left", expand=True, fill="x", padx=2)
 
     def toggle_launcher(self):
         if self.launcher_open:
@@ -511,6 +535,39 @@ class GiriSpaceDesktop(tk.Tk):
             fg="#ffffff" if self.profile == "modern" else "#00d2ff"
         )
         self.draw_wallpaper()
+        if self.quick_settings_open:
+            self.toggle_quick_settings()
+
+    def switch_theme(self, theme):
+        self.theme = theme
+        self.wallpaper_config["theme"] = theme
+
+        if self.wallpaper_config.get("auto_switch_theme", True):
+            target_wp = "giri-os-default-light.png" if theme == "light" else "giri-os-default-dark.png"
+            full_path = os.path.join(WALLPAPER_DIR, target_wp)
+            if not os.path.isfile(full_path):
+                full_path = os.path.join("/usr/share/backgrounds", target_wp)
+            if os.path.isfile(full_path):
+                self.wallpaper_config["current_wallpaper"] = full_path
+                self.wallpaper_config["current_name"] = f"Giri OS — {theme.capitalize()} Edition"
+                self.wallpaper_config["is_solid_color"] = False
+                for s in ["1", "2", "3", "4"]:
+                    self.wallpaper_config["per_space"][s] = full_path
+
+        if hasattr(self, "btn_theme_dark") and hasattr(self, "btn_theme_light"):
+            self.btn_theme_dark.config(
+                bg="#1b2a47" if theme == "dark" else "#10182c",
+                fg="#00d2ff" if theme == "dark" else "#8ea4c8",
+                font=("Segoe UI", 9, "bold" if theme == "dark" else "normal")
+            )
+            self.btn_theme_light.config(
+                bg="#e2e8f0" if theme == "light" else "#10182c",
+                fg="#0f172a" if theme == "light" else "#8ea4c8",
+                font=("Segoe UI", 9, "bold" if theme == "light" else "normal")
+            )
+
+        self.draw_wallpaper()
+        self._save_wallpaper_config()
         if self.quick_settings_open:
             self.toggle_quick_settings()
 

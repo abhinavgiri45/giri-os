@@ -70,9 +70,12 @@ mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/first-boot"
 mkdir -p "${INCLUDES_CHROOT}/etc/calamares/modules"
 mkdir -p "${INCLUDES_CHROOT}/etc/skel/Desktop"
 
-# 4a. Copy Wallpapers & Logos
+# 4a. Copy Wallpapers, Thumbnails, Metadata & Logos
+mkdir -p "${INCLUDES_CHROOT}/usr/share/backgrounds/thumbnails"
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.svg "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
+cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.json "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
+cp -f "${PROJECT_ROOT}/branding/wallpapers/thumbnails/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/thumbnails/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/"*.svg "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.png" "${INCLUDES_CHROOT}/usr/share/pixmaps/giri-os-icon.png" || true

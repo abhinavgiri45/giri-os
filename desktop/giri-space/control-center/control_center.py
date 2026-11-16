@@ -78,53 +78,71 @@ class GiriControlCenter(tk.Toplevel):
         }
 
     def _load_wallpaper_config(self):
+        default_wp = os.path.join(WALLPAPER_DIR, "giri-os-default-dark.png")
+        if not os.path.isfile(default_wp):
+            default_wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
         if os.path.isfile(WALLPAPER_CONFIG):
             try:
-                with open(WALLPAPER_CONFIG, "r") as f:
-                    return json.load(f)
+                with open(WALLPAPER_CONFIG, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                    if not os.path.isfile(cfg.get("current_wallpaper", "")):
+                        cfg["current_wallpaper"] = default_wp
+                    return cfg
             except Exception:
                 pass
         return {
-            "current_wallpaper": os.path.join(WALLPAPER_DIR, "giri-origin.png"),
-            "current_name": "Giri Origin",
+            "current_wallpaper": default_wp,
+            "current_name": "Giri OS — Dark Edition",
+            "theme": "dark",
+            "auto_switch_theme": True,
+            "user_manually_selected": False,
             "mode": "Fill",
             "is_solid_color": False,
             "solid_color": "#050811",
             "per_space": {
-                "1": os.path.join(WALLPAPER_DIR, "giri-origin.png"),
-                "2": os.path.join(WALLPAPER_DIR, "digital-dimensions.png"),
-                "3": os.path.join(WALLPAPER_DIR, "quantum.png"),
-                "4": os.path.join(WALLPAPER_DIR, "midnight-flow.png")
+                "1": default_wp,
+                "2": os.path.join(WALLPAPER_DIR, "giri-origin.png"),
+                "3": os.path.join(WALLPAPER_DIR, "infinite-flow.png"),
+                "4": os.path.join(WALLPAPER_DIR, "quantum-form.png")
             }
         }
 
     def _save_wallpaper_config(self):
         os.makedirs(os.path.dirname(WALLPAPER_CONFIG), exist_ok=True)
         try:
-            with open(WALLPAPER_CONFIG, "w") as f:
+            with open(WALLPAPER_CONFIG, "w", encoding="utf-8") as f:
                 json.dump(self.wallpaper_config, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not save wallpaper configuration: {e}")
 
     def _load_wallpapers_manifest(self):
+        meta_file = os.path.join(WALLPAPER_DIR, "wallpaper-metadata.json")
+        if os.path.isfile(meta_file):
+            try:
+                with open(meta_file, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
         manifest_file = os.path.join(WALLPAPER_DIR, "wallpapers.json")
         if os.path.isfile(manifest_file):
             try:
-                with open(manifest_file, "r") as f:
+                with open(manifest_file, "r", encoding="utf-8") as f:
                     return json.load(f)
             except Exception:
                 pass
         return [
-            {"id": "giri-origin", "name": "Giri Origin", "filename": "giri-origin.png", "category": "Signature Default", "paired_theme": "Giri Dark / Modern"},
-            {"id": "cosmic-horizon", "name": "Cosmic Horizon", "filename": "cosmic-horizon.png", "category": "Space Landscape", "paired_theme": "Giri Midnight"},
-            {"id": "infinite-motion", "name": "Infinite Motion", "filename": "infinite-motion.png", "category": "Flowing Abstract", "paired_theme": "Giri Modern"},
-            {"id": "digital-dimensions", "name": "Digital Dimensions", "filename": "digital-dimensions.png", "category": "Futuristic Architecture", "paired_theme": "Giri Dark"},
-            {"id": "midnight-flow", "name": "Midnight Flow", "filename": "midnight-flow.png", "category": "Deep Contrast", "paired_theme": "Giri Midnight"},
-            {"id": "electric-geometry", "name": "Electric Geometry", "filename": "electric-geometry.png", "category": "Geometric Abstract", "paired_theme": "Giri Dark"},
-            {"id": "beyond-space", "name": "Beyond Space", "filename": "beyond-space.png", "category": "Cosmic Nebula", "paired_theme": "Giri Midnight"},
-            {"id": "quantum", "name": "Quantum", "filename": "quantum.png", "category": "Scientific Minimal", "paired_theme": "Giri Modern"},
-            {"id": "aurora", "name": "Aurora", "filename": "aurora.png", "category": "Atmospheric Wave", "paired_theme": "Giri Dark"},
-            {"id": "pure-minimal", "name": "Pure Minimal", "filename": "pure-minimal.png", "category": "Ultra-Clean Gradient", "paired_theme": "Giri Classic"},
+            {"id": "giri-os-default-dark", "name": "Giri OS — Dark Edition", "filename": "giri-os-default-dark.png", "category": "Official Default", "paired_theme": "Dark", "is_official_default": True},
+            {"id": "giri-os-default-light", "name": "Giri OS — Light Edition", "filename": "giri-os-default-light.png", "category": "Official Default", "paired_theme": "Light", "is_official_default": True},
+            {"id": "giri-origin", "name": "Giri Origin", "filename": "giri-origin.png", "category": "Signature Abstract Architecture", "paired_theme": "Dark / Modern", "is_official_default": True},
+            {"id": "infinite-flow", "name": "Infinite Flow", "filename": "infinite-flow.png", "category": "Flowing Abstract", "paired_theme": "Dark / Modern"},
+            {"id": "quantum-form", "name": "Quantum Form", "filename": "quantum-form.png", "category": "Geometric Architecture", "paired_theme": "Dark / Modern"},
+            {"id": "beyond-horizon", "name": "Beyond Horizon", "filename": "beyond-horizon.png", "category": "Cosmic Horizon", "paired_theme": "Dark / Midnight"},
+            {"id": "midnight-architecture", "name": "Midnight Architecture", "filename": "midnight-architecture.png", "category": "Minimalist Architecture", "paired_theme": "Dark / Classic"},
+            {"id": "electric-geometry", "name": "Electric Geometry", "filename": "electric-geometry.png", "category": "Geometric Abstract", "paired_theme": "Dark / Modern"},
+            {"id": "silent-universe", "name": "Silent Universe", "filename": "silent-universe.png", "category": "Minimalist Space", "paired_theme": "Dark / Midnight"},
+            {"id": "violet-dimension", "name": "Violet Dimension", "filename": "violet-dimension.png", "category": "Cinematic 3D Abstract", "paired_theme": "Dark / Modern"},
+            {"id": "aurora", "name": "Aurora", "filename": "aurora.png", "category": "Atmospheric Wave", "paired_theme": "Dark / Modern"},
+            {"id": "pure-minimal", "name": "Pure Minimal", "filename": "pure-minimal.png", "category": "Ultra-Clean Minimalist", "paired_theme": "Dark / Classic"},
         ]
 
     def setup_ui(self):
@@ -209,20 +227,78 @@ class GiriControlCenter(tk.Toplevel):
 
         tk.Label(hdr_frame, text="Desktop Wallpaper & Backgrounds", font=("Segoe UI", 16, "bold"), fg="#ffffff", bg="#080c1a").pack(side="left")
 
-        btn_restore = tk.Button(
-            hdr_frame,
-            text="★ Restore Default (Giri Origin)",
+        btn_box = tk.Frame(hdr_frame, bg="#080c1a")
+        btn_box.pack(side="right")
+
+        tk.Button(
+            btn_box,
+            text="★ Official Dark",
             font=("Segoe UI", 9, "bold"),
-            bg="#16223d",
+            bg="#0f172a",
             fg="#00d2ff",
+            activebackground="#1e293b",
+            activeforeground="#ffffff",
+            relief="flat",
+            padx=8,
+            pady=3,
+            command=self.restore_official_dark
+        ).pack(side="left", padx=3)
+
+        tk.Button(
+            btn_box,
+            text="☀ Official Light",
+            font=("Segoe UI", 9, "bold"),
+            bg="#f1f5f9",
+            fg="#0f172a",
+            activebackground="#e2e8f0",
+            activeforeground="#0f172a",
+            relief="flat",
+            padx=8,
+            pady=3,
+            command=self.restore_official_light
+        ).pack(side="left", padx=3)
+
+        tk.Button(
+            btn_box,
+            text="↺ Giri Origin",
+            font=("Segoe UI", 9),
+            bg="#16223d",
+            fg="#c2d5ee",
             activebackground="#223359",
             activeforeground="#ffffff",
             relief="flat",
-            padx=10,
-            pady=4,
-            command=self.restore_default_wallpaper
+            padx=8,
+            pady=3,
+            command=self.restore_signature_origin
+        ).pack(side="left", padx=3)
+
+        # Theme & Auto-Switching Control Banner
+        theme_banner = tk.Frame(self.content, bg="#0d1830", padx=14, pady=8, highlightbackground="#1e3a6a", highlightthickness=1)
+        theme_banner.pack(fill="x", pady=(0, 10))
+
+        tk.Label(theme_banner, text="System Theme Mode:", font=("Segoe UI", 10, "bold"), fg="#ffffff", bg="#0d1830").pack(side="left", padx=(0, 10))
+
+        self.theme_var = tk.StringVar(value=self.wallpaper_config.get("theme", "dark"))
+        btn_dark = tk.Button(theme_banner, text="🌙 Dark Theme", font=("Segoe UI", 9, "bold" if self.theme_var.get() == "dark" else "normal"), bg="#0f172a" if self.theme_var.get() == "dark" else "#16223d", fg="#00d2ff" if self.theme_var.get() == "dark" else "#8ea4c8", relief="flat", padx=10, pady=2, command=lambda: self.switch_theme("dark"))
+        btn_dark.pack(side="left", padx=3)
+
+        btn_light = tk.Button(theme_banner, text="☀ Light Theme", font=("Segoe UI", 9, "bold" if self.theme_var.get() == "light" else "normal"), bg="#e2e8f0" if self.theme_var.get() == "light" else "#16223d", fg="#0f172a" if self.theme_var.get() == "light" else "#8ea4c8", relief="flat", padx=10, pady=2, command=lambda: self.switch_theme("light"))
+        btn_light.pack(side="left", padx=3)
+
+        self.auto_switch_var = tk.BooleanVar(value=self.wallpaper_config.get("auto_switch_theme", True))
+        chk_auto = tk.Checkbutton(
+            theme_banner,
+            text="Automatically change wallpaper with theme (Official Light / Dark)",
+            variable=self.auto_switch_var,
+            font=("Segoe UI", 9),
+            fg="#a0aec0",
+            bg="#0d1830",
+            activebackground="#0d1830",
+            activeforeground="#ffffff",
+            selectcolor="#0f172a",
+            command=self.toggle_auto_switch
         )
-        btn_restore.pack(side="right")
+        chk_auto.pack(side="right", padx=5)
 
         # Top Control Row: Current Status + Mode + Space Selector
         ctrl_card = tk.Frame(self.content, bg="#0f172a", padx=14, pady=10)
@@ -381,6 +457,7 @@ class GiriControlCenter(tk.Toplevel):
             self.wallpaper_config["current_wallpaper"] = full_path
             self.wallpaper_config["current_name"] = f"{name} (Space {space_num})"
 
+        self.wallpaper_config["user_manually_selected"] = True
         self._save_wallpaper_config()
         self.lbl_cur_status.config(text=f"Active Wallpaper: {name}")
 
@@ -391,23 +468,82 @@ class GiriControlCenter(tk.Toplevel):
         messagebox.showinfo("Wallpaper Applied", f"Successfully applied '{name}' without restarting.")
 
     def restore_default_wallpaper(self):
-        default_file = os.path.join(WALLPAPER_DIR, "giri-origin.png")
-        self.wallpaper_config["current_wallpaper"] = default_file
-        self.wallpaper_config["current_name"] = "Giri Origin"
+        theme = self.wallpaper_config.get("theme", "dark")
+        if theme == "light":
+            self.restore_official_light()
+        else:
+            self.restore_official_dark()
+
+    def restore_official_dark(self):
+        wp = os.path.join(WALLPAPER_DIR, "giri-os-default-dark.png")
+        if not os.path.isfile(wp):
+            wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
+        self._apply_global_wallpaper(wp, "Giri OS — Dark Edition")
+        self.wallpaper_config["user_manually_selected"] = False
+        self._save_wallpaper_config()
+        messagebox.showinfo("Official Default Applied", "Giri OS — Dark Edition default wallpaper applied successfully.")
+
+    def restore_official_light(self):
+        wp = os.path.join(WALLPAPER_DIR, "giri-os-default-light.png")
+        if not os.path.isfile(wp):
+            wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
+        self._apply_global_wallpaper(wp, "Giri OS — Light Edition")
+        self.wallpaper_config["user_manually_selected"] = False
+        self._save_wallpaper_config()
+        messagebox.showinfo("Official Default Applied", "Giri OS — Light Edition default wallpaper applied successfully.")
+
+    def restore_signature_origin(self):
+        wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
+        self._apply_global_wallpaper(wp, "Giri Origin")
+        self.wallpaper_config["user_manually_selected"] = True
+        self._save_wallpaper_config()
+        messagebox.showinfo("Signature Wallpaper Applied", "Giri Origin signature wallpaper applied successfully.")
+
+    def _apply_global_wallpaper(self, file_path, name):
+        self.wallpaper_config["current_wallpaper"] = file_path
+        self.wallpaper_config["current_name"] = name
         self.wallpaper_config["is_solid_color"] = False
         self.wallpaper_config["mode"] = "Fill"
         self.mode_var.set("Fill")
-
         for s in ["1", "2", "3", "4"]:
-            self.wallpaper_config["per_space"][s] = default_file
-
+            self.wallpaper_config["per_space"][s] = file_path
         self._save_wallpaper_config()
-        self.lbl_cur_status.config(text="Active Wallpaper: Giri Origin (Default)")
-
+        self.lbl_cur_status.config(text=f"Active Wallpaper: {name}")
         if self.parent and hasattr(self.parent, "set_wallpaper_live"):
-            self.parent.set_wallpaper_live(default_file, mode="Fill")
+            self.parent.set_wallpaper_live(file_path, mode="Fill")
 
-        messagebox.showinfo("Wallpaper Restored", "Default Giri OS wallpaper (Giri Origin) restored successfully.")
+    def toggle_auto_switch(self):
+        enabled = self.auto_switch_var.get()
+        self.wallpaper_config["auto_switch_theme"] = enabled
+        if enabled:
+            # Re-apply official default for current theme
+            theme = self.wallpaper_config.get("theme", "dark")
+            if theme == "light":
+                self.restore_official_light()
+            else:
+                self.restore_official_dark()
+        else:
+            self._save_wallpaper_config()
+
+    def switch_theme(self, theme):
+        self.theme_var.set(theme)
+        self.wallpaper_config["theme"] = theme
+        if self.wallpaper_config.get("auto_switch_theme", True):
+            if theme == "light":
+                wp = os.path.join(WALLPAPER_DIR, "giri-os-default-light.png")
+                name = "Giri OS — Light Edition"
+            else:
+                wp = os.path.join(WALLPAPER_DIR, "giri-os-default-dark.png")
+                name = "Giri OS — Dark Edition"
+            if os.path.isfile(wp):
+                self._apply_global_wallpaper(wp, name)
+                self.wallpaper_config["user_manually_selected"] = False
+        else:
+            self._save_wallpaper_config()
+
+        # Update parent desktop theme live
+        if self.parent and hasattr(self.parent, "switch_theme"):
+            self.parent.switch_theme(theme)
 
     def set_solid_color(self, hex_color):
         self.wallpaper_config["is_solid_color"] = True
