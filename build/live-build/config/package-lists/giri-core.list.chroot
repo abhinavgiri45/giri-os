@@ -55,3 +55,4 @@ grub-pc-bin
 efibootmgr
 isolinux
 syslinux-common
+syslinux-utils

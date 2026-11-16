@@ -196,6 +196,13 @@ done
 echo -n "" | cpio -o -H newc > "${BOOTLOADERS_ISOLINUX}/bootlogo" 2>/dev/null || touch "${BOOTLOADERS_ISOLINUX}/bootlogo" || true
 cp -f "${BOOTLOADERS_ISOLINUX}/bootlogo" "${INCLUDES_BINARY}/isolinux/bootlogo" 2>/dev/null || true
 
+# Stage isohybrid utility directly into chroot overlays
+if command -v isohybrid >/dev/null 2>&1; then
+    mkdir -p "${INCLUDES_CHROOT}/usr/bin"
+    cp -fL "$(command -v isohybrid)" "${INCLUDES_CHROOT}/usr/bin/isohybrid"
+    chmod +x "${INCLUDES_CHROOT}/usr/bin/isohybrid"
+fi
+
 # 5. Execute Live-Build Process
 echo "[+] Initializing live-build configuration..."
 cd "${LIVE_BUILD_DIR}"
