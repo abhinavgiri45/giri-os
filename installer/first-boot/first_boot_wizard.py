@@ -5,13 +5,15 @@ Author: Abhinav Giri / Giri OS Core Engineering Team
 License: GPL-3.0-or-later
 
 Provides an elegant, zero-telemetry first-boot provisioning experience for Giri OS.
-Handles localization, user configuration, hardware profile selection, and privacy controls.
+Handles localization, user configuration, theme & wallpaper selection,
+hardware profile selection, and one-time flag persistence.
 """
 
 import sys
 import os
 import json
 import hashlib
+import time
 
 try:
     import tkinter as tk
@@ -20,14 +22,23 @@ except ImportError:
     print("Error: Tkinter GUI toolkit is required to run the Giri OS Setup Wizard.")
     sys.exit(1)
 
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+FLAG_DIR = os.path.expanduser("~/.config/giri")
+FLAG_FILE = os.path.join(FLAG_DIR, "first-boot-done")
+CONFIG_FILE = os.path.join(FLAG_DIR, "user-setup.json")
+SYSTEM_CONFIG_FILE = os.path.join(ROOT_DIR, "system", "etc", "giri-firstboot.json")
+WALLPAPER_CONFIG_FILE = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+
 
 class GiriFirstBootWizard(tk.Tk):
-    def __init__(self, non_interactive=False):
+    def __init__(self, non_interactive=False, force_reconfigure=False):
         super().__init__()
         self.non_interactive = non_interactive
+        self.force_reconfigure = force_reconfigure
+
         self.title("Welcome to Giri OS — First Boot Setup")
-        self.geometry("780x560")
-        self.minsize(720, 500)
+        self.geometry("820x600")
+        self.minsize(740, 520)
         self.configure(bg="#080c1a")
 
         # Configuration state
@@ -38,10 +49,13 @@ class GiriFirstBootWizard(tk.Tk):
             "username": "giri",
             "fullname": "Giri OS User",
             "password_hash": "",
+            "sudo_access": True,
+            "theme_mode": "Dark",
+            "wallpaper_choice": "giri-os-default-dark.png",
             "privacy_telemetry": False,
             "privacy_crash_reports": False,
-            "desktop_theme": "Modern",
-            "hardware_tier": "Auto-Detect"
+            "desktop_theme": "Classic",
+            "hardware_tier": "Classic"
         }
 
         self.current_step = 0
@@ -51,8 +65,9 @@ class GiriFirstBootWizard(tk.Tk):
             ("Keyboard", self.render_keyboard),
             ("Time Zone", self.render_timezone),
             ("User Setup", self.render_user),
-            ("Privacy", self.render_privacy),
+            ("Theme & Appearance", self.render_appearance),
             ("Desktop Profile", self.render_theme),
+            ("Privacy", self.render_privacy),
             ("Ready to Launch", self.render_summary),
         ]
 
@@ -76,7 +91,7 @@ class GiriFirstBootWizard(tk.Tk):
 
         self.step_label = tk.Label(
             self.header_frame,
-            text="Step 1 of 8: Welcome",
+            text=f"Step 1 of {len(self.steps)}: Welcome",
             font=("Segoe UI", 10),
             fg="#8ea4c8",
             bg="#0d1428"
@@ -162,8 +177,8 @@ class GiriFirstBootWizard(tk.Tk):
 
             self.config_data["username"] = username
             self.config_data["fullname"] = self.entry_fullname.get().strip() or username
-            # Compute salted SHA-256 for local verification prototype (Linux PAM crypt is used in real deployment)
             self.config_data["password_hash"] = hashlib.sha256(pwd.encode("utf-8")).hexdigest()
+            self.config_data["sudo_access"] = self.sudo_var.get()
 
         if self.current_step < len(self.steps) - 1:
             self.show_step(self.current_step + 1)
@@ -195,9 +210,9 @@ class GiriFirstBootWizard(tk.Tk):
             "built for high performance, gaming capabilities, deep Windows application compatibility,\n"
             "and long-term reliability.\n\n"
             "Founder & Lead Architect: Abhinav Giri\n"
-            "Base System: Debian GNU/Linux 12 (Bookworm Foundation)\n\n"
+            "Base System: Debian GNU/Linux 12 (Bookworm AMD64)\n\n"
             "This initial setup wizard will help you configure language, input methods, accounts,\n"
-            "and desktop visual profiles in just a few minutes."
+            "desktop theme, and visual profiles in just a few minutes."
         )
         lbl_desc = tk.Label(
             self.content_frame,
@@ -261,7 +276,79 @@ class GiriFirstBootWizard(tk.Tk):
         self.entry_pwd_confirm = tk.Entry(f, font=("Segoe UI", 10), width=32, show="•", bg="#10172e", fg="#ffffff", insertbackground="#00d2ff")
         self.entry_pwd_confirm.grid(row=3, column=1, sticky="w", padx=10, pady=6)
 
-    # Step 6: Privacy
+        self.sudo_var = tk.BooleanVar(value=self.config_data["sudo_access"])
+        chk_sudo = tk.Checkbutton(f, text="Grant administrative (sudo) privileges to this user", variable=self.sudo_var, font=("Segoe UI", 9), fg="#00d2ff", bg="#080c1a", selectcolor="#16223d")
+        chk_sudo.grid(row=4, column=0, columnspan=2, sticky="w", pady=(8, 0))
+
+    # Step 6: Theme & Appearance
+    def render_appearance(self):
+        tk.Label(self.content_frame, text="Select Theme & Default Wallpaper", font=("Segoe UI", 18, "bold"), fg="#ffffff", bg="#080c1a").pack(anchor="w", pady=(10, 10))
+
+        tk.Label(self.content_frame, text="Choose your visual style for Giri Space:", font=("Segoe UI", 10), fg="#a0aec0", bg="#080c1a").pack(anchor="w", pady=(0, 12))
+
+        self.theme_var = tk.StringVar(value=self.config_data["theme_mode"])
+        t_card = tk.Frame(self.content_frame, bg="#0f172a", padx=16, pady=12)
+        t_card.pack(fill="x", pady=4)
+
+        rb_dark = tk.Radiobutton(
+            t_card,
+            text="🌙 Giri OS Dark Edition (Default: giri-os-default-dark.png)",
+            variable=self.theme_var,
+            value="Dark",
+            font=("Segoe UI", 10, "bold"),
+            fg="#00d2ff",
+            bg="#0f172a",
+            selectcolor="#16223d",
+            command=lambda: self.update_theme_choice("Dark", "giri-os-default-dark.png")
+        )
+        rb_dark.pack(anchor="w", pady=3)
+
+        rb_light = tk.Radiobutton(
+            t_card,
+            text="☀ Giri OS Light Edition (Default: giri-os-default-light.png)",
+            variable=self.theme_var,
+            value="Light",
+            font=("Segoe UI", 10, "bold"),
+            fg="#ffffff",
+            bg="#0f172a",
+            selectcolor="#16223d",
+            command=lambda: self.update_theme_choice("Light", "giri-os-default-light.png")
+        )
+        rb_light.pack(anchor="w", pady=3)
+
+        rb_origin = tk.Radiobutton(
+            t_card,
+            text="★ Giri Origin Signature Abstract",
+            variable=self.theme_var,
+            value="Origin",
+            font=("Segoe UI", 10),
+            fg="#c2d5ee",
+            bg="#0f172a",
+            selectcolor="#16223d",
+            command=lambda: self.update_theme_choice("Dark", "giri-origin.png")
+        )
+        rb_origin.pack(anchor="w", pady=3)
+
+    def update_theme_choice(self, mode, wp):
+        self.config_data["theme_mode"] = mode
+        self.config_data["wallpaper_choice"] = wp
+
+    # Step 7: Desktop Theme & Profile
+    def render_theme(self):
+        tk.Label(self.content_frame, text="Desktop Profile & Performance Tuning", font=("Segoe UI", 18, "bold"), fg="#ffffff", bg="#080c1a").pack(anchor="w", pady=(10, 10))
+        desc = (
+            "Select how Giri Space should render graphics on your computer:\n\n"
+            "• Giri Classic: Ultra-lightweight rendering, minimal animations (Recommended for Intel HD 2000, 4-8GB RAM, HDDs)\n"
+            "• Giri Modern: Fluid animations, orbital glassmorphism, rich shadows (Recommended for modern GPUs)"
+        )
+        tk.Label(self.content_frame, text=desc, font=("Segoe UI", 10), justify="left", fg="#a0aec0", bg="#080c1a").pack(anchor="w", pady=(0, 15))
+
+        self.profile_var = tk.StringVar(value=self.config_data["desktop_theme"])
+        for opt in ["Classic", "Modern"]:
+            rb = tk.Radiobutton(self.content_frame, text=f"Giri {opt}", variable=self.profile_var, value=opt, font=("Segoe UI", 11, "bold"), fg="#00d2ff" if opt == "Classic" else "#c2d5ee", bg="#080c1a", selectcolor="#16223d", command=lambda: self.config_data.update({"desktop_theme": self.profile_var.get()}))
+            rb.pack(anchor="w", pady=4)
+
+    # Step 8: Privacy
     def render_privacy(self):
         tk.Label(self.content_frame, text="Privacy & Telemetry Controls", font=("Segoe UI", 18, "bold"), fg="#ffffff", bg="#080c1a").pack(anchor="w", pady=(10, 10))
         desc = (
@@ -279,47 +366,74 @@ class GiriFirstBootWizard(tk.Tk):
             fg="#c2d5ee",
             bg="#080c1a",
             selectcolor="#16223d",
-            activebackground="#080c1a",
-            activeforeground="#ffffff",
             command=lambda: self.config_data.update({"privacy_crash_reports": self.cb_crash_var.get()})
         )
         cb_crash.pack(anchor="w", pady=5)
 
-    # Step 7: Desktop Theme & Profile
-    def render_theme(self):
-        tk.Label(self.content_frame, text="Desktop Profile & Visual Experience", font=("Segoe UI", 18, "bold"), fg="#ffffff", bg="#080c1a").pack(anchor="w", pady=(10, 10))
-        desc = (
-            "Select how Giri Space should render graphics on your computer:\n\n"
-            "• Giri Modern: Fluid animations, orbital glassmorphism, rich shadows (Recommended for modern GPUs)\n"
-            "• Giri Classic: Ultra-lightweight rendering, minimal animations (Recommended for Intel HD 2000, 4-8GB RAM, HDDs)"
-        )
-        tk.Label(self.content_frame, text=desc, font=("Segoe UI", 10), justify="left", fg="#a0aec0", bg="#080c1a").pack(anchor="w", pady=(0, 15))
-
-        self.theme_var = tk.StringVar(value=self.config_data["desktop_theme"])
-        for opt in ["Modern", "Classic"]:
-            rb = tk.Radiobutton(self.content_frame, text=f"Giri {opt}", variable=self.theme_var, value=opt, font=("Segoe UI", 11, "bold"), fg="#00d2ff" if opt == "Modern" else "#8ea4c8", bg="#080c1a", selectcolor="#16223d", activebackground="#080c1a", activeforeground="#ffffff", command=lambda: self.config_data.update({"desktop_theme": self.theme_var.get()}))
-            rb.pack(anchor="w", pady=4)
-
-    # Step 8: Summary
+    # Step 9: Summary
     def render_summary(self):
         tk.Label(self.content_frame, text="Ready to Launch Giri Space", font=("Segoe UI", 20, "bold"), fg="#ffffff", bg="#080c1a").pack(anchor="w", pady=(10, 10))
         summary = (
-            f"User Account: {self.config_data['username']} ({self.config_data['fullname']})\n"
-            f"Language:     {self.config_data['language']}\n"
-            f"Keyboard:     {self.config_data['keyboard']}\n"
-            f"Time Zone:    {self.config_data['timezone']}\n"
-            f"Desktop Mode: Giri {self.config_data['desktop_theme']}\n"
-            f"Telemetry:    Completely Disabled (Strict zero tracking)\n\n"
+            f"User Account:     {self.config_data['username']} ({self.config_data['fullname']})\n"
+            f"Admin (sudo):     {'Yes' if self.config_data['sudo_access'] else 'No'}\n"
+            f"Language:         {self.config_data['language']}\n"
+            f"Keyboard:         {self.config_data['keyboard']}\n"
+            f"Time Zone:        {self.config_data['timezone']}\n"
+            f"Visual Style:     Giri {self.config_data['theme_mode']} Edition ({self.config_data['wallpaper_choice']})\n"
+            f"Desktop Profile:  Giri {self.config_data['desktop_theme']}\n"
+            f"Telemetry:        Strictly Disabled (Zero tracking)\n\n"
             "Click 'Finish & Start Giri Space' to apply settings and enter your new operating system!"
         )
         tk.Label(self.content_frame, text=summary, font=("Consolas", 10), justify="left", fg="#00d2ff", bg="#10172e", padx=16, pady=16).pack(anchor="w", fill="x", pady=10)
 
     def save_and_finish(self):
-        os.makedirs("system/etc", exist_ok=True)
-        out_file = "system/etc/giri-firstboot.json"
-        with open(out_file, "w") as f:
+        # 1. Save user configuration to user config dir
+        os.makedirs(FLAG_DIR, exist_ok=True)
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(self.config_data, f, indent=2)
-        print(f"Setup completed. Configuration written to {out_file}")
+
+        # 2. Save system copy
+        os.makedirs(os.path.dirname(SYSTEM_CONFIG_FILE), exist_ok=True)
+        try:
+            with open(SYSTEM_CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.config_data, f, indent=2)
+        except Exception:
+            pass
+
+        # 3. Write wallpaper config
+        wp_path = os.path.join(ROOT_DIR, "branding", "wallpapers", self.config_data["wallpaper_choice"])
+        wp_cfg = {
+            "current_wallpaper": wp_path,
+            "current_name": f"Giri OS — {self.config_data['theme_mode']} Edition",
+            "theme": self.config_data["theme_mode"].lower(),
+            "auto_switch_theme": True,
+            "user_manually_selected": False,
+            "mode": "Fill",
+            "is_solid_color": False,
+            "solid_color": "#050811",
+            "per_space": {
+                "1": wp_path,
+                "2": os.path.join(ROOT_DIR, "branding", "wallpapers", "giri-origin.png"),
+                "3": os.path.join(ROOT_DIR, "branding", "wallpapers", "infinite-flow.png"),
+                "4": os.path.join(ROOT_DIR, "branding", "wallpapers", "quantum-form.png")
+            }
+        }
+        try:
+            with open(WALLPAPER_CONFIG_FILE, "w", encoding="utf-8") as f:
+                json.dump(wp_cfg, f, indent=2)
+        except Exception:
+            pass
+
+        # 4. Write completion flag
+        with open(FLAG_FILE, "w", encoding="utf-8") as f:
+            flag_info = {
+                "completed_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "username": self.config_data["username"],
+                "version": "0.1 Genesis"
+            }
+            json.dump(flag_info, f, indent=2)
+
+        print(f"Setup completed. Configuration written to {CONFIG_FILE}")
         messagebox.showinfo("Setup Complete", "Welcome to Giri OS! Initial configuration saved.")
         self.destroy()
 
@@ -329,6 +443,7 @@ def run_headless_verification():
     wizard = GiriFirstBootWizard(non_interactive=True)
     assert wizard.config_data["privacy_telemetry"] is False
     assert wizard.config_data["language"] == "English (United States)"
+    assert wizard.config_data["theme_mode"] in ["Dark", "Light"]
     print("Headless First Boot Wizard state verification passed.")
     wizard.destroy()
 
@@ -336,6 +451,14 @@ def run_headless_verification():
 if __name__ == "__main__":
     if "--verify" in sys.argv:
         run_headless_verification()
-    else:
-        app = GiriFirstBootWizard()
-        app.mainloop()
+        sys.exit(0)
+
+    # Check one-time flag
+    is_reconfigure = "--reconfigure" in sys.argv
+    if os.path.isfile(FLAG_FILE) and not is_reconfigure:
+        print(f"Giri OS first-boot setup has already been completed ({FLAG_FILE} exists).")
+        print("To run setup again, execute: python first_boot_wizard.py --reconfigure")
+        sys.exit(0)
+
+    app = GiriFirstBootWizard(force_reconfigure=is_reconfigure)
+    app.mainloop()

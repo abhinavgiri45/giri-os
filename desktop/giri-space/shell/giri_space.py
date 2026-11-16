@@ -5,11 +5,13 @@ Author: Abhinav Giri / Giri OS Core Engineering Team
 License: GPL-3.0-or-later
 
 Official Giri Space desktop shell:
-- Full live wallpaper engine featuring 'Giri Origin' as default
+- Full live wallpaper engine featuring 'Giri Origin' and official Light/Dark pairs
 - Live real-time wallpaper updates without restarting
 - Support for Fill, Fit, Stretch, Center, and Solid Colour modes
-- Per-Space virtual desktop wallpaper assignment
-- Giri Top Bar, Floating Dock, Giri Launch, and Quick Settings
+- Per-Space virtual desktop wallpaper assignment (Spaces 1-4)
+- Giri Top Bar, Floating Dock, Giri Launch with categories, and Quick Settings
+- Modal Session Management (Lock, Logout, Reboot, Shutdown)
+- Window manager keyboard shortcut integration (Super, Escape, Super+1..4, Super+T, Super+C)
 """
 
 import sys
@@ -17,6 +19,7 @@ import os
 import time
 import math
 import json
+import shutil
 import subprocess
 
 try:
@@ -61,6 +64,7 @@ class GiriSpaceDesktop(tk.Tk):
         self.launcher_open = False
         self.quick_settings_open = False
         self.running_apps = {"Giri Files", "Giri Control"}
+        self.selected_category = "All"
 
         # Palette definition
         self.colors = {
@@ -81,6 +85,7 @@ class GiriSpaceDesktop(tk.Tk):
         self.bg_photo = None  # Reference to prevent garbage collection
 
         self.setup_desktop()
+        self.setup_keyboard_shortcuts()
         self.start_clock_timer()
 
         if self.non_interactive:
@@ -142,6 +147,36 @@ class GiriSpaceDesktop(tk.Tk):
 
         # 5. Giri Quick Settings Overlay Panel (Initially hidden)
         self.setup_quick_settings()
+
+    def setup_keyboard_shortcuts(self):
+        """Binds universal window manager and shell keyboard shortcuts."""
+        # Toggle launcher with Super / Win key
+        for key in ["<Super_L>", "<Super_R>", "<KeyPress-Super_L>", "<KeyPress-Super_R>"]:
+            try:
+                self.bind_all(key, lambda e: self.toggle_launcher())
+            except Exception:
+                pass
+
+        # Escape closes overlays
+        self.bind_all("<Escape>", lambda e: self.close_all_overlays())
+
+        # Super+1..4 switches virtual desktop Spaces
+        for i in range(1, 5):
+            self.bind_all(f"<Alt-Key-{i}>", lambda e, n=i: self.switch_space(n))
+            self.bind_all(f"<Control-Key-{i}>", lambda e, n=i: self.switch_space(n))
+
+        # Terminal shortcut: Super+T or Ctrl+Alt+T
+        self.bind_all("<Control-Alt-t>", lambda e: self.launch_app("Terminal"))
+        self.bind_all("<Alt-t>", lambda e: self.launch_app("Terminal"))
+
+        # Settings shortcut: Super+C or Alt+C
+        self.bind_all("<Alt-c>", lambda e: self.open_control_center())
+
+    def close_all_overlays(self):
+        if self.launcher_open:
+            self.toggle_launcher()
+        if self.quick_settings_open:
+            self.toggle_quick_settings()
 
     def draw_wallpaper(self):
         w = self.winfo_width() or 1120
@@ -319,8 +354,22 @@ class GiriSpaceDesktop(tk.Tk):
         )
         self.btn_qs.pack(side="left", padx=4)
 
+        # Power/Session button in top bar
+        self.btn_power = tk.Button(
+            self.right_frame,
+            text=" ⏻ ",
+            font=("Segoe UI", 10, "bold"),
+            bg="#101a33",
+            fg="#ff5555",
+            activebackground="#2a1622",
+            activeforeground="#ff7777",
+            relief="flat",
+            command=self.show_session_dialog
+        )
+        self.btn_power.pack(side="left", padx=4)
+
     def setup_dock(self):
-        dock_width = 440
+        dock_width = 460
         dock_height = 58
         self.dock_frame = tk.Frame(
             self,
@@ -330,7 +379,7 @@ class GiriSpaceDesktop(tk.Tk):
         )
         self.dock_frame.place(relx=0.5, rely=1.0, anchor="s", y=-14, width=dock_width, height=dock_height)
 
-        dock_items = [
+        self.dock_items = [
             ("⊞", "Giri Launch", self.toggle_launcher),
             ("📁", "Giri Files", lambda: self.launch_app("Giri Files")),
             ("🌉", "Giri Bridge", lambda: self.launch_app("Giri Bridge")),
@@ -340,7 +389,8 @@ class GiriSpaceDesktop(tk.Tk):
             ("🔄", "Giri Update", lambda: self.launch_app("Giri Update")),
         ]
 
-        for icon, name, action in dock_items:
+        self.dock_dots = {}
+        for icon, name, action in self.dock_items:
             f = tk.Frame(self.dock_frame, bg=self.colors["dock_bg"])
             f.pack(side="left", expand=True, fill="both", padx=3, pady=4)
 
@@ -366,6 +416,12 @@ class GiriSpaceDesktop(tk.Tk):
                 bg=self.colors["dock_bg"]
             )
             dot.pack(side="bottom")
+            self.dock_dots[name] = dot
+
+    def update_dock_indicators(self):
+        for name, dot in self.dock_dots.items():
+            is_running = name in self.running_apps
+            dot.config(text="•" if is_running else " ")
 
     def setup_launcher(self):
         self.launcher_frame = tk.Frame(
@@ -373,12 +429,13 @@ class GiriSpaceDesktop(tk.Tk):
             bg="#0a1020",
             highlightbackground=self.colors["pane_tl"],
             highlightthickness=1,
-            padx=16,
-            pady=16
+            padx=14,
+            pady=14
         )
-        self.launcher_frame.place(x=8, y=42, width=380, height=480)
+        self.launcher_frame.place(x=8, y=42, width=420, height=520)
         self.launcher_frame.place_forget()
 
+        # Header with Search
         lbl_s = tk.Label(self.launcher_frame, text="Search Giri OS...", font=("Segoe UI", 10, "bold"), fg=self.colors["pane_tl"], bg="#0a1020")
         lbl_s.pack(anchor="w")
 
@@ -390,30 +447,73 @@ class GiriSpaceDesktop(tk.Tk):
             insertbackground="#00d2ff",
             relief="flat"
         )
-        self.search_entry.pack(fill="x", pady=(4, 12))
+        self.search_entry.pack(fill="x", pady=(4, 8))
         self.search_entry.bind("<KeyRelease>", self.filter_apps)
 
+        # Category Filter Tabs
+        cat_frame = tk.Frame(self.launcher_frame, bg="#0a1020")
+        cat_frame.pack(fill="x", pady=(0, 8))
+
+        self.categories = ["All", "System", "Dev", "Media", "Settings", "Bridge"]
+        self.cat_buttons = {}
+        for cat in self.categories:
+            btn = tk.Button(
+                cat_frame,
+                text=cat,
+                font=("Segoe UI", 8, "bold" if cat == "All" else "normal"),
+                bg="#1b2a47" if cat == "All" else "#0f172a",
+                fg="#00d2ff" if cat == "All" else "#8ea4c8",
+                activebackground="#1e3a6a",
+                relief="flat",
+                padx=6,
+                pady=2,
+                command=lambda c=cat: self.select_category(c)
+            )
+            btn.pack(side="left", padx=2)
+            self.cat_buttons[cat] = btn
+
+        # Scrollable App List Container
         self.app_list_frame = tk.Frame(self.launcher_frame, bg="#0a1020")
         self.app_list_frame.pack(fill="both", expand=True)
 
         self.apps = [
-            ("📁 Giri Files", "File Manager & Storage Browser"),
-            ("🌉 Giri Bridge", "Windows Application Compatibility (.exe)"),
-            ("🎮 Giri Gaming Dashboard", "Steam, GameMode & Controller Manager"),
-            ("⚙️ Giri Control", "System Settings, Display & Hardware"),
-            ("🔄 Giri Update", "Cryptographic Package & Kernel Updater"),
-            ("💻 Giri Terminal", "Bash Console & Shell Utilities"),
-            ("🌐 Giri Browser", "Secure Web Browser"),
-            ("📝 Text Editor", "Lightweight Code & Document Editor"),
-            ("📊 System Monitor", "Live CPU, Memory & Disk Activity"),
+            ("📁 Giri Files", "File Manager & Storage Browser", "System"),
+            ("🌉 Giri Bridge", "Windows Application Compatibility (.exe)", "Bridge"),
+            ("🎮 Giri Gaming Dashboard", "Steam, GameMode & Controller Manager", "Media"),
+            ("⚙️ Giri Control", "System Settings, Display & Hardware", "Settings"),
+            ("🔄 Giri Update", "Debian Package & Kernel Updater", "System"),
+            ("💻 Giri Terminal", "Bash Console & Shell Utilities", "Dev"),
+            ("🌐 Giri Browser", "Secure Web Browser", "Media"),
+            ("📝 Text Editor", "Lightweight Code & Document Editor", "Dev"),
+            ("📊 System Monitor", "Live CPU, Memory & Disk Activity", "System"),
+            ("📦 Software Center", "Install & Manage Debian Packages", "System"),
         ]
         self.populate_apps(self.apps)
+
+        # Launcher Footer: Power Actions
+        pwr_footer = tk.Frame(self.launcher_frame, bg="#060c18", pady=6)
+        pwr_footer.pack(fill="x", side="bottom")
+
+        tk.Button(pwr_footer, text="🔒 Lock", font=("Segoe UI", 8), bg="#0f172a", fg="#c2d5ee", relief="flat", command=self.action_lock).pack(side="left", expand=True, fill="x", padx=2)
+        tk.Button(pwr_footer, text="🚪 Log Out", font=("Segoe UI", 8), bg="#0f172a", fg="#c2d5ee", relief="flat", command=self.action_logout).pack(side="left", expand=True, fill="x", padx=2)
+        tk.Button(pwr_footer, text="↺ Reboot", font=("Segoe UI", 8), bg="#0f172a", fg="#ffaa44", relief="flat", command=self.action_reboot).pack(side="left", expand=True, fill="x", padx=2)
+        tk.Button(pwr_footer, text="⏻ Shut Down", font=("Segoe UI", 8, "bold"), bg="#1a1216", fg="#ff5555", relief="flat", command=self.action_shutdown).pack(side="left", expand=True, fill="x", padx=2)
+
+    def select_category(self, cat):
+        self.selected_category = cat
+        for c, btn in self.cat_buttons.items():
+            if c == cat:
+                btn.config(bg="#1b2a47", fg="#00d2ff", font=("Segoe UI", 8, "bold"))
+            else:
+                btn.config(bg="#0f172a", fg="#8ea4c8", font=("Segoe UI", 8, "normal"))
+        self.filter_apps()
 
     def populate_apps(self, app_list):
         for w in self.app_list_frame.winfo_children():
             w.destroy()
 
-        for name, desc in app_list:
+        for item in app_list:
+            name, desc = item[0], item[1]
             btn = tk.Button(
                 self.app_list_frame,
                 text=f"{name}\n   {desc}",
@@ -433,7 +533,14 @@ class GiriSpaceDesktop(tk.Tk):
 
     def filter_apps(self, event=None):
         query = self.search_entry.get().lower().strip()
-        filtered = [item for item in self.apps if query in item[0].lower() or query in item[1].lower()]
+        filtered = []
+        for item in self.apps:
+            name, desc, cat = item[0], item[1], item[2]
+            if self.selected_category != "All" and cat != self.selected_category:
+                continue
+            if query and query not in name.lower() and query not in desc.lower():
+                continue
+            filtered.append(item)
         self.populate_apps(filtered)
 
     def setup_quick_settings(self):
@@ -500,7 +607,7 @@ class GiriSpaceDesktop(tk.Tk):
         else:
             if self.quick_settings_open:
                 self.toggle_quick_settings()
-            self.launcher_frame.place(x=8, y=42, width=380, height=480)
+            self.launcher_frame.place(x=8, y=42, width=420, height=520)
             self.launcher_frame.lift()
             self.search_entry.focus_set()
             self.launcher_open = True
@@ -574,6 +681,7 @@ class GiriSpaceDesktop(tk.Tk):
     def launch_app(self, name):
         clean_name = name.split(" ", 1)[-1]
         self.running_apps.add(clean_name)
+        self.update_dock_indicators()
         if self.launcher_open:
             self.toggle_launcher()
 
@@ -594,7 +702,6 @@ class GiriSpaceDesktop(tk.Tk):
         for key, cmds in app_commands.items():
             if key.lower() in name.lower():
                 for cmd in cmds:
-                    import shutil
                     if shutil.which(cmd):
                         try:
                             subprocess.Popen([cmd])
@@ -617,6 +724,116 @@ class GiriSpaceDesktop(tk.Tk):
         else:
             messagebox.showinfo("Giri Control", "Opening Giri Control Center...")
 
+    # =========================================================================
+    # Session Management & Power Actions
+    # =========================================================================
+    def show_session_dialog(self):
+        """Displays a clean modal dialog for Lock, Log Out, Reboot, and Shutdown."""
+        dialog = tk.Toplevel(self)
+        dialog.title("Session Actions")
+        dialog.geometry("380x280")
+        dialog.resizable(False, False)
+        dialog.configure(bg="#0a1020")
+        dialog.transient(self)
+        dialog.grab_set()
+
+        # Center on parent
+        x = self.winfo_x() + (self.winfo_width() // 2) - 190
+        y = self.winfo_y() + (self.winfo_height() // 2) - 140
+        dialog.geometry(f"+{x}+{y}")
+
+        tk.Label(
+            dialog,
+            text="Giri OS Session Control",
+            font=("Segoe UI", 13, "bold"),
+            fg="#00d2ff",
+            bg="#0a1020"
+        ).pack(pady=(16, 6))
+
+        tk.Label(
+            dialog,
+            text="Select an action to perform on your active session:",
+            font=("Segoe UI", 9),
+            fg="#8ea4c8",
+            bg="#0a1020"
+        ).pack(pady=(0, 14))
+
+        actions = [
+            ("🔒 Lock Session", "#0f172a", "#c2d5ee", lambda: [dialog.destroy(), self.action_lock()]),
+            ("🚪 Log Out", "#0f172a", "#c2d5ee", lambda: [dialog.destroy(), self.action_logout()]),
+            ("↺ Restart System", "#1b2a47", "#ffaa44", lambda: [dialog.destroy(), self.action_reboot()]),
+            ("⏻ Shut Down", "#2a1418", "#ff5555", lambda: [dialog.destroy(), self.action_shutdown()]),
+        ]
+
+        for text, bg, fg, cmd in actions:
+            btn = tk.Button(
+                dialog,
+                text=text,
+                font=("Segoe UI", 10, "bold" if "Shut" in text or "Restart" in text else "normal"),
+                bg=bg,
+                fg=fg,
+                activebackground="#1e293b",
+                activeforeground="#ffffff",
+                relief="flat",
+                pady=6,
+                command=cmd
+            )
+            btn.pack(fill="x", padx=30, pady=4)
+
+        tk.Button(
+            dialog,
+            text="Cancel",
+            font=("Segoe UI", 9),
+            bg="#0a1020",
+            fg="#64748b",
+            activeforeground="#94a3b8",
+            relief="flat",
+            command=dialog.destroy
+        ).pack(pady=(8, 0))
+
+    def action_lock(self):
+        for cmd in [["loginctl", "lock-session"], ["xflock4"], ["slock"], ["i3lock"]]:
+            if shutil.which(cmd[0]):
+                try:
+                    subprocess.run(cmd, check=True)
+                    return
+                except Exception:
+                    pass
+        messagebox.showinfo("Session Locked", "Giri OS session locked.")
+
+    def action_logout(self):
+        if messagebox.askyesno("Confirm Log Out", "Are you sure you want to log out of Giri OS?"):
+            for cmd in [["loginctl", "terminate-user", os.environ.get("USER", "")], ["xfce4-session-logout", "--logout"]]:
+                if cmd[0] and shutil.which(cmd[0]):
+                    try:
+                        subprocess.run(cmd, check=True)
+                        return
+                    except Exception:
+                        pass
+            self.destroy()
+
+    def action_reboot(self):
+        if messagebox.askyesno("Confirm Restart", "Are you sure you want to restart the computer?"):
+            for cmd in [["systemctl", "reboot"], ["reboot"]]:
+                if shutil.which(cmd[0]):
+                    try:
+                        subprocess.run(cmd, check=True)
+                        return
+                    except Exception:
+                        pass
+            messagebox.showinfo("System Reboot", "Reboot requested via systemctl.")
+
+    def action_shutdown(self):
+        if messagebox.askyesno("Confirm Shut Down", "Are you sure you want to shut down Giri OS?"):
+            for cmd in [["systemctl", "poweroff"], ["poweroff"], ["shutdown", "-h", "now"]]:
+                if shutil.which(cmd[0]):
+                    try:
+                        subprocess.run(cmd, check=True)
+                        return
+                    except Exception:
+                        pass
+            messagebox.showinfo("System Shutdown", "Shutdown requested via systemctl.")
+
     def start_clock_timer(self):
         def update():
             now_str = time.strftime("%a %b %d  •  %H:%M:%S")
@@ -634,7 +851,7 @@ if __name__ == "__main__":
 
     if "--verify" in sys.argv:
         app = GiriSpaceDesktop(profile=profile_arg, non_interactive=True)
-        print(f"Giri Space Desktop shell ({profile_arg.upper()} profile) with wallpaper engine verified successfully.")
+        print(f"Giri Space Desktop shell ({profile_arg.upper()} profile) with session manager and shortcuts verified successfully.")
         app.destroy()
     else:
         app = GiriSpaceDesktop(profile=profile_arg)

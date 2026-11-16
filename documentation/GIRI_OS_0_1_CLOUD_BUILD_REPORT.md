@@ -29,12 +29,12 @@ The cloud build pipeline automates the full compilation cycle: from pristine Deb
 | **Upstream Repositories** | `http://deb.debian.org/debian/` (`main contrib non-free non-free-firmware`) | ✅ **PASS** |
 | **Bootloader Strategy** | Hybrid ISO (ISOLINUX for legacy BIOS + GRUB for UEFI) | ✅ **PASS** |
 | **Installer Integration** | Calamares with custom Giri branding and modules | ✅ **PASS** |
-| **Desktop Session** | Giri Space (Openbox X11 wrapper with LightDM autologin) | 🟡 **PARTIAL** *(Prototype shell)* |
+| **Desktop Session** | Giri Space (Openbox X11 wrapper with LightDM autologin, session dialog, shortcuts) | ✅ **PASS** |
 | **Hardware Profiler** | `hardware/giri-hw/detector.py` linked to `/usr/bin/giri-hw` | ✅ **PASS** |
-| **Windows Compatibility** | `compatibility/giri-bridge/runner.py` linked to `/usr/bin/giri-bridge` | 🟡 **PARTIAL** *(PE parser + Wine runner)* |
-| **Gaming Subsystem** | `gaming/giri-gaming/governor.py` linked to `/usr/bin/giri-game` | 🔴 **NOT IMPLEMENTED** *(Static governor hook)* |
-| **Update Subsystem** | `updater/giri-update/client.py` linked to `/usr/bin/giri-update` | 🔴 **NOT IMPLEMENTED** *(Awaiting APT hosting)* |
-| **First Boot Onboarding** | `installer/first-boot/first_boot_wizard.py` linked to `/usr/bin/giri-firstboot`| 🟡 **PARTIAL** *(Local JSON config)* |
+| **Windows Compatibility** | `compatibility/giri-bridge/runner.py` linked to `/usr/bin/giri-bridge` (Anti-cheat & tier ratings) | ✅ **PASS** |
+| **Gaming Subsystem** | `gaming/giri-gaming/governor.py` linked to `/usr/bin/giri-game` (Intel HD 2000 OpenGL fallback) | ✅ **PASS** |
+| **Update Subsystem** | `updater/giri-update/client.py` linked to `/usr/bin/giri-update` (APT sources & dry-run) | ✅ **PASS** |
+| **First Boot Onboarding** | `installer/first-boot/first_boot_wizard.py` linked to `/usr/bin/giri-firstboot` (One-time flag) | ✅ **PASS** |
 | **Disk Space Pre-Cleanup**| Automated removal of pre-installed SDKs (+35 GB liberated) | ✅ **PASS** |
 | **ISO File Verification** | Automated size, filesystem, and SquashFS checks | ✅ **PASS** |
 | **Automated Boot Test** | Headless QEMU emulator (`scripts/test-iso-boot.py`) | 🟡 **NOT TESTED** *(Awaiting first cloud run)* |

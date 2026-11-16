@@ -302,3 +302,18 @@ To transition Giri OS from a prototype codebase into a real, bootable operating 
 Giri OS has established high-quality branding, clear architectural blueprints, well-structured Debian live-build configurations, and operational Python prototypes for hardware profiling, wallpaper management, and PE binary analysis.
 
 However, **it is not yet a bootable or usable operating system.** The priority now is not writing more visual mockups, but compiling the Debian live-build recipe in a proper Linux environment to produce the first bootable ISO image.
+
+---
+
+## 9. Addendum: Milestone 0.1 Genesis Stabilization Resolution (Nov 16, 2026)
+
+Following the initial audit, comprehensive stabilization and feature completion was executed on branch `feature/genesis-stabilization`:
+1. **Giri Space Desktop Shell Stabilized:** Added categorized application launcher (6 categories), dock active application tracking, modal session management dialog (Lock, Logout, Reboot, Shutdown) with systemd/loginctl integration, and universal window manager keyboard navigation (`Super`, `Escape`, `Super+1..4`, `Super+T`, `Super+C`).
+2. **Giri Control Center Enhanced:** Complete system settings hub added with live display resolution/refresh rate management via xrandr/screen geometry, 12-piece native 4K wallpaper manager, appearance & dock preferences, hardware inspection, and integrated Giri Bridge, Giri Gaming, and Giri Update management tabs.
+3. **Giri Gaming Realistically Re-Engineered:** Rewritten to `GiriGameOptimizer` (`governor.py`) with sysfs CPU governor probing, safe reversible profiles, automatic Intel HD 2000 OpenGL fallback (`wined3d`, `PROTON_USE_WINED3D=1`, `MESA_GL_VERSION_OVERRIDE=3.3`), and fullscreen EWMH window detection.
+4. **Giri Update Upgraded to Debian APT Client:** Replaced mock dictionary with real Debian APT sources parser (`/etc/apt/sources.list`, `/etc/apt/sources.list.d/`), 2048 MB free disk space pre-check, keyring auditing, safe dry-run simulation mode, and honest status reporting regarding custom mirror availability vs upstream Debian.
+5. **Giri Bridge Upgraded:** Added imported DLL scanning (DirectX 9/11/12, Vulkan), anti-cheat signature detection (Easy Anti-Cheat, BattlEye, Vanguard), compatibility tier calculation (Platinum to Unsupported), and prefix lifecycle management (create, list, clean, delete).
+6. **First Boot Wizard Hardened:** Added one-time completion flag handling (`~/.config/giri/first-boot-done`), `--reconfigure` support, theme/wallpaper pairing, and persistent configuration export.
+7. **Calamares Branding Staged:** Staged scalable SVG and PNG branding icons into `/usr/share/icons/hicolor/scalable/apps/` and `/etc/calamares/branding/giri/` inside `build-iso.sh`.
+8. **Automated Test Suite Expanded:** Expanded from 9 to 16 comprehensive unit and integration tests (`tests/test_giri_suite.py`), achieving 100% pass rate.
+*See `documentation/GENESIS_STABILIZATION_REPORT.md` for complete subsystem-by-subsystem evaluation.*

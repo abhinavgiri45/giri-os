@@ -58,8 +58,10 @@ echo "[+] Staging Giri OS branding and desktop components into chroot overlays..
 INCLUDES_CHROOT="${LIVE_BUILD_DIR}/config/includes.chroot"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-orbit"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/grub/themes/giri"
-mkdir -p "${INCLUDES_CHROOT}/usr/share/backgrounds"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/backgrounds/thumbnails"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/pixmaps"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/icons/hicolor/scalable/apps"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/icons/hicolor/48x48/apps"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/applications"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/giri-space"
 mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/hardware"
@@ -68,10 +70,11 @@ mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/gaming"
 mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/updater"
 mkdir -p "${INCLUDES_CHROOT}/usr/lib/giri/first-boot"
 mkdir -p "${INCLUDES_CHROOT}/etc/calamares/modules"
+mkdir -p "${INCLUDES_CHROOT}/etc/calamares/branding/giri"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/calamares/branding/giri"
 mkdir -p "${INCLUDES_CHROOT}/etc/skel/Desktop"
 
 # 4a. Copy Wallpapers, Thumbnails, Metadata & Logos
-mkdir -p "${INCLUDES_CHROOT}/usr/share/backgrounds/thumbnails"
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.svg "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/wallpapers/"*.json "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
@@ -79,6 +82,8 @@ cp -f "${PROJECT_ROOT}/branding/wallpapers/thumbnails/"*.png "${INCLUDES_CHROOT}
 cp -f "${PROJECT_ROOT}/branding/logo/"*.svg "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/"*.png "${INCLUDES_CHROOT}/usr/share/backgrounds/" || true
 cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.png" "${INCLUDES_CHROOT}/usr/share/pixmaps/giri-os-icon.png" || true
+cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.svg" "${INCLUDES_CHROOT}/usr/share/icons/hicolor/scalable/apps/giri-os-icon.svg" || true
+cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.png" "${INCLUDES_CHROOT}/usr/share/icons/hicolor/48x48/apps/giri-os-icon.png" || true
 
 # 4b. Copy Plymouth Theme
 cp -rf "${PROJECT_ROOT}/boot/plymouth/giri-orbit/"* "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-orbit/"
@@ -99,12 +104,15 @@ cp -rf "${PROJECT_ROOT}/installer/first-boot/"* "${INCLUDES_CHROOT}/usr/lib/giri
 # 4f. Copy Calamares Installer Settings & Modules
 cp -f "${PROJECT_ROOT}/installer/calamares/settings.conf" "${INCLUDES_CHROOT}/etc/calamares/" || true
 cp -rf "${PROJECT_ROOT}/installer/calamares/modules/"* "${INCLUDES_CHROOT}/etc/calamares/modules/" || true
+cp -f "${PROJECT_ROOT}/installer/calamares/modules/branding.desc" "${INCLUDES_CHROOT}/etc/calamares/branding/giri/branding.desc" || true
+cp -f "${PROJECT_ROOT}/installer/calamares/modules/branding.desc" "${INCLUDES_CHROOT}/usr/share/calamares/branding/giri/branding.desc" || true
 
 # 4g. Copy System release files and configurations
 cp -f "${PROJECT_ROOT}/system/etc/os-release" "${INCLUDES_CHROOT}/etc/os-release"
 cp -f "${PROJECT_ROOT}/system/etc/issue" "${INCLUDES_CHROOT}/etc/issue"
 cp -f "${PROJECT_ROOT}/system/etc/lsb-release" "${INCLUDES_CHROOT}/etc/lsb-release"
 cp -f "${PROJECT_ROOT}/system/etc/giri-wallpaper.json" "${INCLUDES_CHROOT}/etc/giri-wallpaper.json" || true
+cp -f "${PROJECT_ROOT}/system/etc/giri-desktop-prefs.json" "${INCLUDES_CHROOT}/etc/giri-desktop-prefs.json" || true
 
 # 4h. Copy Desktop shortcuts to /etc/skel/Desktop and /usr/share/applications
 cp -f "${PROJECT_ROOT}/desktop/giri-space/shortcuts/"*.desktop "${INCLUDES_CHROOT}/etc/skel/Desktop/" || true

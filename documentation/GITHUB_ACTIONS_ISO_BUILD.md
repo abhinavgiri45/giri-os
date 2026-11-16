@@ -52,8 +52,12 @@ Open **Command Prompt** or **PowerShell** in your project folder (`c:\Users\abhi
 2. Click on the **Actions** tab at the top of the repository.
 3. In the left sidebar, click on **Build Giri OS 0.1 Genesis ISO**.
 4. Click the **Run workflow** dropdown on the right side of the page.
-5. Leave the branch set to `master` (and leave *Execute automated QEMU headless boot smoke test* checked).
+5. Select branch `feature/genesis-stabilization` (or `master`) and leave *Execute automated QEMU headless boot smoke test* checked.
 6. Click the green **Run workflow** button.
+   - The workflow executes the full 16-test pre-flight suite (`tests/test_giri_suite.py`).
+   - Compiles the Debian 12 Bookworm live-build ISO with all stabilized Giri OS components and 4K wallpapers.
+   - Tests the resulting ISO in headless QEMU.
+   - Packages the artifact as `Giri-OS-0.1-Genesis-AMD64.zip`.
 
 ---
 

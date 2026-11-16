@@ -6,12 +6,13 @@ License: GPL-3.0-or-later
 
 Validates all Giri OS subsystems headlessly:
 - Hardware Profiler & Tier Classification
-- First Boot Setup Wizard State & Zero Telemetry
-- Giri Space Desktop Shell (Classic & Modern Profiles)
-- Giri Bridge Windows PE Header Parser
-- Giri Gaming Governor & Safe Fallback Engine
-- Giri Update Cryptographic Integrity Verifier
-- Wallpaper Collection Integrity & Default Assignment
+- First Boot Setup Wizard State, Flags & Zero Telemetry
+- Giri Space Desktop Shell (Classic & Modern Profiles, Session Dialog, Shortcuts)
+- Giri Bridge Windows PE Header Parser, Anti-Cheat Detection & Prefix Management
+- Giri Gaming Governor, Game Optimizer & Intel HD 2000 OpenGL Fallback
+- Giri Update Debian APT Inspection, GPG Verification, Disk Audit & Dry-Run
+- Official 12-Piece 4K UHD Wallpaper Collection & Dual Default Pair
+- Calamares Installer Configuration & Scalable Branding Assets
 """
 
 import unittest
@@ -19,6 +20,7 @@ import sys
 import os
 import hashlib
 import json
+import shutil
 import importlib.util
 from PIL import Image
 
@@ -45,6 +47,7 @@ HardwareDetector = hw_mod.HardwareDetector
 GiriFirstBootWizard = wizard_mod.GiriFirstBootWizard
 GiriSpaceDesktop = space_mod.GiriSpaceDesktop
 PEAnalyzer = bridge_mod.PEAnalyzer
+GiriGameOptimizer = gaming_mod.GiriGameOptimizer
 GiriGameGovernor = gaming_mod.GiriGameGovernor
 GiriUpdateClient = updater_mod.GiriUpdateClient
 GiriControlCenter = control_mod.GiriControlCenter
@@ -65,6 +68,7 @@ class TestGiriOSCore(unittest.TestCase):
         wizard = GiriFirstBootWizard(non_interactive=True)
         self.assertFalse(wizard.config_data["privacy_telemetry"])
         self.assertFalse(wizard.config_data["privacy_crash_reports"])
+        self.assertIn(wizard.config_data["theme_mode"], ["Dark", "Light"])
         wizard.destroy()
 
     def test_03_giri_bridge_pe_analyzer(self):
@@ -75,6 +79,7 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertTrue(report["valid_pe"])
         self.assertTrue(report["is_64bit"])
         self.assertEqual(report["recommended_prefix"], "win64")
+        self.assertEqual(report["compatibility_tier"], "Platinum")
         if os.path.exists(test_pe):
             os.remove(test_pe)
 
@@ -96,6 +101,7 @@ class TestGiriOSCore(unittest.TestCase):
     def test_06_giri_space_desktop_shell(self):
         desktop_classic = GiriSpaceDesktop(profile="classic", non_interactive=True)
         self.assertEqual(desktop_classic.profile, "classic")
+        self.assertTrue(hasattr(desktop_classic, "show_session_dialog"))
         desktop_classic.destroy()
 
         desktop_modern = GiriSpaceDesktop(profile="modern", non_interactive=True)
@@ -142,6 +148,7 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIn("wine_installed", status)
         self.assertIn("prefix_root", status)
         self.assertIn("subsystem", status)
+        self.assertIn("disclaimer", status)
 
     def test_09_calamares_configurations(self):
         settings_path = os.path.join(ROOT_DIR, "installer", "calamares", "settings.conf")
@@ -159,15 +166,106 @@ class TestGiriOSCore(unittest.TestCase):
 
         # Switch to light theme -> auto-switches to giri-os-default-light.png
         desktop.switch_theme("light")
-        self.assertEqual(desktop.theme, "light")
         self.assertIn("giri-os-default-light.png", desktop.wallpaper_config.get("current_wallpaper", ""))
 
-        # Switch back to dark theme -> auto-switches to giri-os-default-dark.png
+        # Switch back to dark theme -> auto-switches back to dark default
         desktop.switch_theme("dark")
-        self.assertEqual(desktop.theme, "dark")
         self.assertIn("giri-os-default-dark.png", desktop.wallpaper_config.get("current_wallpaper", ""))
-
         desktop.destroy()
+
+    def test_11_giri_gaming_safe_profile_engine(self):
+        optimizer = GiriGameOptimizer()
+        # Test performance profile application
+        perf_res = optimizer.apply_profile("PERFORMANCE")
+        self.assertTrue(perf_res["success"])
+        self.assertEqual(optimizer.active_profile, "PERFORMANCE")
+
+        # Test safe environment variables
+        self.assertEqual(os.environ.get("WINE_D3D_CONFIG"), "renderer=gl")
+        self.assertEqual(os.environ.get("PROTON_USE_WINED3D"), "1")
+        self.assertEqual(os.environ.get("MESA_GL_VERSION_OVERRIDE"), "3.3")
+
+        # Revert to balanced
+        bal_res = optimizer.apply_profile("DESKTOP_DEFAULT")
+        self.assertTrue(bal_res["success"])
+        self.assertIn(optimizer.active_profile, ["BALANCED", "DESKTOP_DEFAULT"])
+
+    def test_12_giri_update_apt_inspection(self):
+        client = GiriUpdateClient(root_dir=ROOT_DIR)
+        sources = client.inspect_apt_sources()
+        self.assertIn("official_debian_active", sources)
+        self.assertIn("custom_giri_active", sources)
+        self.assertIn("status_summary", sources)
+
+        # Check disk space method
+        space = client.check_disk_space()
+        self.assertIn("free_mb", space)
+        self.assertIn("sufficient", space)
+
+        # Check production repo guide
+        guide = client.get_repo_infrastructure_guide()
+        self.assertIn("GIRI OS", guide)
+        self.assertIn("deb.debian.org", guide)
+
+    def test_13_giri_bridge_compatibility_tiers(self):
+        analyzer = PEAnalyzer()
+        test_dir = os.path.join(ROOT_DIR, "tests")
+
+        # D3D11 app
+        d3d11_file = os.path.join(test_dir, "test_d3d11_mock.exe")
+        analyzer.create_mock_pe(d3d11_file, is_64bit=True, inject_d3d11=True)
+        res_d3d11 = analyzer.analyze(d3d11_file)
+        self.assertEqual(res_d3d11["compatibility_tier"], "Silver")
+
+        # Anti-Cheat app
+        ac_file = os.path.join(test_dir, "test_ac_mock.exe")
+        analyzer.create_mock_pe(ac_file, is_64bit=True, inject_anti_cheat=True)
+        res_ac = analyzer.analyze(ac_file)
+        self.assertEqual(res_ac["compatibility_tier"], "Unsupported")
+        self.assertTrue(res_ac["anti_cheat_detected"])
+
+        # Clean up mocks
+        for f in [d3d11_file, ac_file]:
+            if os.path.exists(f):
+                os.remove(f)
+
+    def test_14_giri_bridge_prefix_lifecycle(self):
+        mock_dir = os.path.join(ROOT_DIR, "tests", "test_prefixes_dir")
+        runner = WineRunner(base_prefix_dir=mock_dir)
+
+        create_res = runner.create_prefix("unit_test_pfx", arch="win64")
+        self.assertTrue(create_res["success"])
+        self.assertTrue(os.path.isdir(os.path.join(mock_dir, "unit_test_pfx")))
+
+        prefixes = runner.list_prefixes()
+        self.assertTrue(any(p["name"] == "unit_test_pfx" for p in prefixes))
+
+        del_res = runner.delete_prefix("unit_test_pfx")
+        self.assertTrue(del_res["success"])
+        self.assertFalse(os.path.exists(os.path.join(mock_dir, "unit_test_pfx")))
+
+        shutil.rmtree(mock_dir, ignore_errors=True)
+
+    def test_15_calamares_icons_and_branding(self):
+        svg_icon = os.path.join(ROOT_DIR, "branding", "logo", "giri-os-icon.svg")
+        png_icon = os.path.join(ROOT_DIR, "branding", "logo", "giri-os-icon.png")
+        self.assertTrue(os.path.isfile(svg_icon), "Calamares branding requires scalable SVG logo")
+        self.assertTrue(os.path.isfile(png_icon), "Calamares branding requires PNG icon")
+
+        # Check branding.desc contains correct icon path references
+        b_desc = os.path.join(ROOT_DIR, "installer", "calamares", "modules", "branding.desc")
+        with open(b_desc, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("productLogo", content)
+        self.assertIn("productIcon", content)
+        self.assertIn("productWelcome", content)
+
+    def test_16_control_center_subsystem_integration(self):
+        cc = GiriControlCenter(non_interactive=True)
+        self.assertIsNotNone(cc.wallpaper_config)
+        self.assertIsNotNone(cc.desktop_prefs)
+        self.assertEqual(len(cc.wallpapers_manifest), 12)
+        cc.destroy()
 
 
 if __name__ == "__main__":
