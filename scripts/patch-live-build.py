@@ -55,11 +55,12 @@ def patch_live_build():
                         modified = True
                         patched_bootlogo += 1
 
-                # 3. Patch isohybrid package dependency from syslinux to syslinux-utils for Debian Bookworm
-                if "isohybrid" in content:
-                    new_content = content.replace(
-                        "Check_package chroot/usr/bin/isohybrid syslinux",
-                        "Check_package chroot/usr/bin/isohybrid syslinux-utils"
+                # 3. Patch isohybrid package dependency from syslinux to syslinux-utils for Debian Bookworm (idempotent)
+                if "isohybrid" in content and "Check_package chroot/usr/bin/isohybrid syslinux-utils" not in content:
+                    new_content = re.sub(
+                        r'Check_package chroot/usr/bin/isohybrid syslinux(?!\S)',
+                        'Check_package chroot/usr/bin/isohybrid syslinux-utils',
+                        content
                     )
                     if new_content != content:
                         content = new_content
