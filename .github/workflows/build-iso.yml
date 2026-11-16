@@ -70,6 +70,7 @@ jobs:
             squashfs-tools \
             xorriso \
             isolinux \
+            syslinux \
             syslinux-common \
             syslinux-utils \
             grub-pc-bin \

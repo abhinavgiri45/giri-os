@@ -53,3 +53,5 @@ plymouth-themes
 grub-efi-amd64-bin
 grub-pc-bin
 efibootmgr
+isolinux
+syslinux-common

@@ -68,6 +68,21 @@ if [ -d /usr/lib/live/build ]; then
     python3 -c "import glob, re; [open(f, 'w').write(re.sub(r'/dists/([^/]+)/(?:main/)*Contents-', r'/dists/\1/main/Contents-', open(f).read())) for f in glob.glob('/usr/lib/live/build/*') if 'Contents-' in open(f).read()]" 2>/dev/null || true
 fi
 
+# Dereference and replace any symlinks in host live-build bootloader templates with actual binaries
+if [ -d /usr/share/live/build/bootloaders ]; then
+    echo "[+] Resolving and dereferencing bootloader template symlinks in /usr/share/live/build/bootloaders..."
+    for bin_path in /usr/lib/ISOLINUX/isolinux.bin /usr/share/isolinux/isolinux.bin /usr/lib/syslinux/isolinux.bin; do
+        if [ -f "$bin_path" ]; then
+            cp -fL "$bin_path" /usr/share/live/build/bootloaders/isolinux/isolinux.bin 2>/dev/null || true
+            break
+        fi
+    done
+    for mod in vesamenu.c32 ldlinux.c32 libcom32.c32 libutil.c32 libmenu.c32 libgpl.c32 hdt.c32 chain.c32 menu.c32; do
+        find /usr/lib/syslinux /usr/share/syslinux -name "$mod" -exec cp -fL {} /usr/share/live/build/bootloaders/syslinux_common/ 2>/dev/null \; || true
+        find /usr/lib/syslinux /usr/share/syslinux -name "$mod" -exec cp -fL {} /usr/share/live/build/bootloaders/isolinux/ 2>/dev/null \; || true
+    done
+fi
+
 # 4. Stage Chroot Overlays (Branding, Themes, Desktop, Core Services)
 echo "[+] Staging Giri OS branding and desktop components into chroot overlays..."
 INCLUDES_CHROOT="${LIVE_BUILD_DIR}/config/includes.chroot"
@@ -136,12 +151,46 @@ cp -f "${PROJECT_ROOT}/desktop/giri-space/shortcuts/"*.desktop "${INCLUDES_CHROO
 # 4i. Stage Binary ISO Bootloader Assets (GRUB and ISOLINUX)
 echo "[+] Staging binary bootloader configurations for hybrid BIOS/UEFI boot..."
 INCLUDES_BINARY="${LIVE_BUILD_DIR}/config/includes.binary"
+BOOTLOADERS_ISOLINUX="${LIVE_BUILD_DIR}/config/bootloaders/isolinux"
+BOOTLOADERS_COMMON="${LIVE_BUILD_DIR}/config/bootloaders/syslinux_common"
+
 mkdir -p "${INCLUDES_BINARY}/boot/grub/themes/giri"
 mkdir -p "${INCLUDES_BINARY}/isolinux"
+mkdir -p "${BOOTLOADERS_ISOLINUX}"
+mkdir -p "${BOOTLOADERS_COMMON}"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/ISOLINUX"
+mkdir -p "${INCLUDES_CHROOT}/usr/lib/syslinux/modules/bios"
 
 cp -f "${PROJECT_ROOT}/boot/grub/grub.cfg" "${INCLUDES_BINARY}/boot/grub/grub.cfg" || true
 cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_BINARY}/boot/grub/themes/giri/" || true
 cp -f "${PROJECT_ROOT}/boot/isolinux/isolinux.cfg" "${INCLUDES_BINARY}/isolinux/isolinux.cfg" || true
+cp -f "${PROJECT_ROOT}/boot/isolinux/isolinux.cfg" "${BOOTLOADERS_ISOLINUX}/isolinux.cfg" || true
+
+# Copy real isolinux.bin and isohdpfx.bin into bootloaders, includes.binary, and includes.chroot
+for bin_path in /usr/lib/ISOLINUX/isolinux.bin /usr/share/isolinux/isolinux.bin /usr/lib/syslinux/isolinux.bin; do
+    if [ -f "${bin_path}" ]; then
+        cp -fL "${bin_path}" "${BOOTLOADERS_ISOLINUX}/isolinux.bin"
+        cp -fL "${bin_path}" "${INCLUDES_BINARY}/isolinux/isolinux.bin"
+        cp -fL "${bin_path}" "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isolinux.bin"
+        break
+    fi
+done
+
+for mbr_path in /usr/lib/ISOLINUX/isohdpfx.bin /usr/share/isolinux/isohdpfx.bin /usr/lib/syslinux/isohdpfx.bin; do
+    if [ -f "${mbr_path}" ]; then
+        cp -fL "${mbr_path}" "${BOOTLOADERS_ISOLINUX}/isohdpfx.bin"
+        cp -fL "${mbr_path}" "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isohdpfx.bin"
+        break
+    fi
+done
+
+# Copy real COM32 modules into bootloaders, includes.binary, and includes.chroot
+for mod in vesamenu.c32 ldlinux.c32 libcom32.c32 libutil.c32 libmenu.c32 libgpl.c32 hdt.c32 chain.c32 menu.c32; do
+    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${BOOTLOADERS_COMMON}/" \; 2>/dev/null || true
+    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${BOOTLOADERS_ISOLINUX}/" \; 2>/dev/null || true
+    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${INCLUDES_BINARY}/isolinux/" \; 2>/dev/null || true
+    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${INCLUDES_CHROOT}/usr/lib/syslinux/modules/bios/" \; 2>/dev/null || true
+done
 
 # 5. Execute Live-Build Process
 echo "[+] Initializing live-build configuration..."
