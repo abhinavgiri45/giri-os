@@ -15,7 +15,7 @@ lb config noauto \
     --architectures amd64 \
     --archive-areas "main contrib non-free non-free-firmware" \
     --binary-images iso-hybrid \
-    --bootloaders "syslinux,grub-efi" \
+    --bootloader syslinux \
     --bootappend-live "boot=live components quiet splash username=giri hostname=giri-os" \
     --linux-flavours amd64 \
     --memtest memtest86+ \
@@ -35,6 +35,5 @@ lb config noauto \
     --apt-indices false \
     --apt-recommends true \
     --security true \
-    --updates true \
     --win32-loader false \
     "${@}"

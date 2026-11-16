@@ -1,0 +1,11 @@
+{
+  "accent_color": "#00d2ff",
+  "dock_position": "bottom",
+  "dock_size": "medium",
+  "dock_autohide": false,
+  "animations_enabled": true,
+  "resolution": "1920x1080",
+  "refresh_rate": "60 Hz",
+  "scaling": "100%",
+  "orientation": "Normal"
+}
