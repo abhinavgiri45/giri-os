@@ -31,7 +31,9 @@ lightdm-gtk-greeter-settings
 
 # Audio Stack (Low Latency PipeWire)
 pipewire
-pipewire-audio-client-libraries
+pipewire-audio
+pipewire-pulse
+pipewire-alsa
 wireplumber
 pavucontrol
 pulseaudio-utils

@@ -98,7 +98,9 @@ jobs:
         run: |
           echo "[+] Launching Master ISO Build Pipeline..."
           mkdir -p releases
-          sudo ./scripts/build-iso.sh 2>&1 | tee releases/build.log
+          chmod +x scripts/*.sh scripts/*.py build/live-build/auto/* build/live-build/config/hooks/live/* 2>/dev/null || true
+          set -o pipefail
+          sudo -E bash ./scripts/build-iso.sh 2>&1 | tee releases/build.log
 
       - name: Validate ISO Filesystem & Bootloader
         run: |
@@ -136,20 +138,20 @@ jobs:
           ls -la /mnt/giri_iso_audit
 
           echo "[+] Verifying Live Kernel and SquashFS filesystem:"
-          if [ ! -f /mnt/giri_iso_audit/live/vmlinuz* ] && [ ! -f /mnt/giri_iso_audit/live/vmlinuz ]; then
+          if ! sudo ls /mnt/giri_iso_audit/live/vmlinuz* 1> /dev/null 2>&1; then
             echo "[-] ERROR: Linux kernel missing from /live directory!"
-            sudo umount /mnt/giri_iso_audit
+            sudo umount /mnt/giri_iso_audit || true
             exit 1
           fi
 
           if [ ! -f /mnt/giri_iso_audit/live/filesystem.squashfs ]; then
             echo "[-] ERROR: Root SquashFS filesystem missing from /live directory!"
-            sudo umount /mnt/giri_iso_audit
+            sudo umount /mnt/giri_iso_audit || true
             exit 1
           fi
 
           echo "[+] Kernel, Initrd, and SquashFS verified present."
-          sudo umount /mnt/giri_iso_audit
+          sudo umount /mnt/giri_iso_audit || true
 
           echo "[+] Verifying SHA256 checksum integrity:"
           cd releases

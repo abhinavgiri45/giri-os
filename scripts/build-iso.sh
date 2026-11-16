@@ -26,8 +26,13 @@ if [[ "${EUID}" -ne 0 ]]; then
     exit 1
 fi
 
+# Ensure DEBOOTSTRAP_OPTIONS points to Debian archive keyring when running on Ubuntu
+export DEBOOTSTRAP_OPTIONS="${DEBOOTSTRAP_OPTIONS:---keyring=/usr/share/keyrings/debian-archive-keyring.gpg}"
+
 # 2. Disk Space Safety Check
 echo "[+] Checking available disk space..."
+mkdir -p "${LIVE_BUILD_DIR}"
+mkdir -p "${RELEASES_DIR}"
 AVAILABLE_KB=$(df -P "${LIVE_BUILD_DIR}" | awk 'NR==2 {print $4}')
 REQUIRED_KB=$((12 * 1024 * 1024)) # 12 GB in KB minimum
 
@@ -52,6 +57,10 @@ if [[ ${#MISSING_TOOLS[@]} -gt 0 ]]; then
     echo "    Please run: sudo ./scripts/setup-dev-env.sh"
     exit 1
 fi
+
+# Ensure executable permissions on helper scripts and hooks
+chmod +x "${LIVE_BUILD_DIR}/auto/"* 2>/dev/null || true
+chmod +x "${LIVE_BUILD_DIR}/config/hooks/live/"* 2>/dev/null || true
 
 # 4. Stage Chroot Overlays (Branding, Themes, Desktop, Core Services)
 echo "[+] Staging Giri OS branding and desktop components into chroot overlays..."

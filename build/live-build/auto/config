@@ -7,13 +7,16 @@ set -e
 # Founder: Abhinav Giri | Tagline: One System. Infinite Possibilities.
 # ====================================================================
 
+export DEBOOTSTRAP_OPTIONS="${DEBOOTSTRAP_OPTIONS:---keyring=/usr/share/keyrings/debian-archive-keyring.gpg}"
+
 lb config noauto \
+    --mode debian \
     --distribution bookworm \
     --architectures amd64 \
     --archive-areas "main contrib non-free non-free-firmware" \
     --binary-images iso-hybrid \
-    --bootloader syslinux \
-    --grub-theme "/usr/share/grub/themes/giri" \
+    --bootloaders "syslinux,grub-efi" \
+    --bootappend-live "boot=live components quiet splash username=giri hostname=giri-os" \
     --linux-flavours amd64 \
     --memtest memtest86+ \
     --iso-application "Giri OS 0.1 Genesis" \
