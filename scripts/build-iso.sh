@@ -130,6 +130,18 @@ cp -rf "${PROJECT_ROOT}/compatibility/"* "${INCLUDES_CHROOT}/usr/lib/giri/compat
 cp -rf "${PROJECT_ROOT}/gaming/"* "${INCLUDES_CHROOT}/usr/lib/giri/gaming/"
 cp -rf "${PROJECT_ROOT}/updater/"* "${INCLUDES_CHROOT}/usr/lib/giri/updater/"
 cp -rf "${PROJECT_ROOT}/installer/first-boot/"* "${INCLUDES_CHROOT}/usr/lib/giri/first-boot/"
+mkdir -p "${INCLUDES_CHROOT}/usr/bin"
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-welcome"
+#!/bin/sh
+exec python3 /usr/lib/giri/first-boot/giri_welcome.py "$@"
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-welcome"
+
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-firstboot"
+#!/bin/sh
+exec python3 /usr/lib/giri/first-boot/first_boot_wizard.py "$@"
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-firstboot"
 
 # 4f. Copy Calamares Installer Settings & Modules
 cp -f "${PROJECT_ROOT}/installer/calamares/settings.conf" "${INCLUDES_CHROOT}/etc/calamares/" || true

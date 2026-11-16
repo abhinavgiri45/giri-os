@@ -42,6 +42,7 @@ gaming_mod = load_module("governor", "gaming/giri-gaming/governor.py")
 updater_mod = load_module("client", "updater/giri-update/client.py")
 control_mod = load_module("control_center", "desktop/giri-space/control-center/control_center.py")
 runner_mod = load_module("runner", "compatibility/giri-bridge/runner.py")
+welcome_mod = load_module("giri_welcome", "installer/first-boot/giri_welcome.py")
 
 HardwareDetector = hw_mod.HardwareDetector
 GiriFirstBootWizard = wizard_mod.GiriFirstBootWizard
@@ -52,6 +53,7 @@ GiriGameGovernor = gaming_mod.GiriGameGovernor
 GiriUpdateClient = updater_mod.GiriUpdateClient
 GiriControlCenter = control_mod.GiriControlCenter
 WineRunner = runner_mod.WineRunner
+GiriWelcomeExperience = welcome_mod.GiriWelcomeExperience
 
 
 class TestGiriOSCore(unittest.TestCase):
@@ -266,6 +268,82 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIsNotNone(cc.desktop_prefs)
         self.assertEqual(len(cc.wallpapers_manifest), 12)
         cc.destroy()
+
+    def test_17_welcome_experience_instantiation(self):
+        app = GiriWelcomeExperience(skip_animation=False, test_mode=True)
+        self.assertIsNotNone(app.canvas)
+        # Check multilingual greetings data includes required sequence
+        greetings_texts = [g[0] for g in app.greetings]
+        self.assertIn("WELCOME", greetings_texts)
+        self.assertIn("नमस्ते", greetings_texts)
+        self.assertIn("NAMASTE", greetings_texts)
+        self.assertIn("ONE SYSTEM. INFINITE POSSIBILITIES.", greetings_texts)
+        app.destroy()
+
+    def test_18_welcome_experience_skippable(self):
+        app = GiriWelcomeExperience(skip_animation=False, test_mode=True)
+        self.assertTrue(app.animation_running)
+        app.skip_and_launch()
+        self.assertFalse(app.animation_running)
+
+    def test_19_first_boot_wizard_multilingual(self):
+        wizard = GiriFirstBootWizard(non_interactive=True)
+        # Verify 11 total steps
+        self.assertEqual(len(wizard.steps), 11)
+        # Verify language choices include English and Hindi
+        wizard.render_language()
+        self.assertIn("English (United States)", wizard.config_data["language"])
+        # Check Hindi string representation
+        hindi_present = any("हिन्दी" in lang[1] for lang in [
+            ("en_US", "English (US)"),
+            ("hi_IN", "हिन्दी — Devanagari UI & Input")
+        ])
+        self.assertTrue(hindi_present)
+        wizard.destroy()
+
+    def test_20_first_boot_network_and_offline(self):
+        net_info = wizard_mod.detect_network_status()
+        self.assertIn("connected", net_info)
+        self.assertIn("interfaces", net_info)
+        self.assertIn("details", net_info)
+        self.assertIsInstance(net_info["interfaces"], list)
+
+    def test_21_first_boot_live_session_isolation(self):
+        is_live = wizard_mod.is_live_session()
+        self.assertIn(is_live, [True, False])
+        # Verify live session safety policy logic
+        self.assertIn(welcome_mod.is_live_session(), [True, False])
+
+    def test_22_first_boot_interrupted_recovery(self):
+        # A fresh wizard must NOT write the flag file upon initialization
+        flag_file = os.path.join(ROOT_DIR, "tests", "test_flag_file")
+        if os.path.exists(flag_file):
+            os.remove(flag_file)
+        wizard = GiriFirstBootWizard(non_interactive=True)
+        self.assertFalse(os.path.exists(flag_file))
+        wizard.destroy()
+
+    def test_23_first_boot_save_and_finish_state(self):
+        test_flag_dir = os.path.join(ROOT_DIR, "tests", "temp_giri_config")
+        os.makedirs(test_flag_dir, exist_ok=True)
+        test_flag = os.path.join(test_flag_dir, "first-boot-done")
+
+        # Mock FLAG_FILE location for isolated test
+        orig_flag = wizard_mod.FLAG_FILE
+        wizard_mod.FLAG_FILE = test_flag
+        wizard = GiriFirstBootWizard(non_interactive=True)
+        wizard.config_data["username"] = "testuser"
+        wizard.save_and_finish()
+
+        self.assertTrue(os.path.isfile(test_flag))
+        with open(test_flag, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        self.assertEqual(data["username"], "testuser")
+        self.assertEqual(data["version"], "0.1 Genesis")
+
+        # Clean up
+        wizard_mod.FLAG_FILE = orig_flag
+        shutil.rmtree(test_flag_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

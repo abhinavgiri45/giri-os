@@ -37,6 +37,18 @@ if command -v feh >/dev/null 2>&1; then
     fi
 fi
 
+# 4b. Giri Welcome & First Boot Experience
+# Only runs on a freshly installed system when first-boot completion flag is absent.
+# Live ISO sessions and subsequent boots automatically bypass this.
+# Guaranteed safe fallback: '|| true' ensures Giri Space launches even if firstboot exits.
+if [ ! -d /run/live ] && [ ! -f /var/lib/giri/first-boot-done ] && [ ! -f "$HOME/.config/giri/first-boot-done" ]; then
+    if [ -f /usr/lib/giri/first-boot/giri_welcome.py ]; then
+        python3 /usr/lib/giri/first-boot/giri_welcome.py || true
+    elif [ -f /usr/lib/giri/first-boot/first_boot_wizard.py ]; then
+        python3 /usr/lib/giri/first-boot/first_boot_wizard.py || true
+    fi
+fi
+
 # 5. Launch Giri Space Desktop Shell as main session process
 if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
     exec python3 /usr/share/giri-space/shell/giri_space.py --profile "$PROFILE"
