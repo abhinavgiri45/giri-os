@@ -23,9 +23,9 @@ dpkg --add-architecture i386 || true
 echo "giri-os" > /etc/hostname
 
 # 3. Configure Plymouth Boot Splash Theme
-if [ -d /usr/share/plymouth/themes/giri-orbit ]; then
-    echo ">>> Setting Plymouth default theme to giri-orbit..."
-    plymouth-set-default-theme -R giri-orbit || true
+if [ -d /usr/share/plymouth/themes/giri-genesis ]; then
+    echo ">>> Setting Plymouth default theme to giri-genesis..."
+    plymouth-set-default-theme -R giri-genesis || true
 fi
 
 # 4. Configure Default Live User Privileges (giri)

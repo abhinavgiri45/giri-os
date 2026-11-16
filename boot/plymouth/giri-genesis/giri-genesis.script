@@ -1,16 +1,17 @@
 # ====================================================================
-# GIRI OS — PLYMOUTH BOOT SPLASH ANIMATION SCRIPT
-# Official Four-Pane Geometric Window Identity (Symmetrical 2x2 Formation)
+# GIRI OS 0.1 "GENESIS" — PLYMOUTH BOOT SPLASH ANIMATION SCRIPT
+# Official Identity: Gradient Geometric "G" Emblem
+# Founder: Abhinav Giri | Tagline: ONE SYSTEM. INFINITE POSSIBILITIES.
 # ====================================================================
 
-# Set Clean Background Color (Deep Navy #080c1a)
+# Set Clean Background Color (Deep Space Navy #080C1A)
 Window.SetBackgroundTopColor(0.031, 0.047, 0.102);
 Window.SetBackgroundBottomColor(0.016, 0.024, 0.055);
 
 screen_width = Window.GetWidth();
 screen_height = Window.GetHeight();
 
-# Load Logo Sprite (Symmetrical 2x2 Four-Pane Window)
+# Load Logo Sprite (Official Giri OS "G" Emblem)
 logo_image = Image("logo.png");
 logo_sprite = Sprite(logo_image);
 logo_x = (screen_width - logo_image.GetWidth()) / 2;
@@ -51,30 +52,23 @@ fun refresh_callback () {
 
 Plymouth.SetRefreshFunction(refresh_callback);
 
-# Progress Callback (Updated by systemd boot generator)
+# Progress Callback
 fun progress_callback (duration, progress) {
     if (progress > current_progress) {
         current_progress = progress;
+        bar_fg_scaled = bar_fg_image.Scale(bar_fg_image.GetWidth() * progress, bar_fg_image.GetHeight());
+        bar_fg_sprite.SetImage(bar_fg_scaled);
     }
-    
-    bar_width = (bar_bg_image.GetWidth() - 4) * current_progress;
-    if (bar_width < 1) {
-        bar_width = 1;
-    }
-    
-    # Scale progress bar fill
-    bar_fg_scaled = bar_fg_image.Scale(bar_width, bar_fg_image.GetHeight());
-    bar_fg_sprite.SetImage(bar_fg_scaled);
 }
 
 Plymouth.SetBootProgressFunction(progress_callback);
 
-# Boot Quit Handler (Smooth Fadeout)
+# Quit Callback
 fun quit_callback () {
-    logo_sprite.SetOpacity(0.0);
-    bar_bg_sprite.SetOpacity(0.0);
-    bar_fg_sprite.SetOpacity(0.0);
-    tagline_sprite.SetOpacity(0.0);
+    logo_sprite.SetOpacity(0);
+    bar_bg_sprite.SetOpacity(0);
+    bar_fg_sprite.SetOpacity(0);
+    tagline_sprite.SetOpacity(0);
 }
 
 Plymouth.SetQuitFunction(quit_callback);

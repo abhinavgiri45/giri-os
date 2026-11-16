@@ -23,10 +23,15 @@ def main():
 
     script_dir = Path(__file__).resolve().parent
     project_root = script_dir.parent
-    iso_path = project_root / "releases" / "giri-os-0.1-genesis-amd64.iso"
     releases_dir = project_root / "releases"
     releases_dir.mkdir(parents=True, exist_ok=True)
     qemu_log_path = releases_dir / "qemu-boot.log"
+
+    iso_candidates = list(releases_dir.glob("giri-os-*.iso"))
+    if iso_candidates:
+        iso_path = sorted(iso_candidates, key=lambda p: p.stat().st_mtime, reverse=True)[0]
+    else:
+        iso_path = releases_dir / "giri-os-0.1-genesis-v2-amd64.iso"
 
     if not iso_path.exists():
         print(f"[-] ERROR: Target ISO not found at {iso_path}")

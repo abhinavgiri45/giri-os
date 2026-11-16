@@ -284,18 +284,45 @@ class GiriSpaceDesktop(tk.Tk):
         self.topbar = tk.Frame(self, bg=self.colors["topbar_bg"], height=38)
         self.topbar.place(x=0, y=0, relwidth=1.0, height=38)
 
-        # Left: Giri Launcher Trigger
-        self.btn_logo = tk.Button(
-            self.topbar,
-            text=" ⊞ GIRI ",
-            font=("Segoe UI", 10, "bold"),
-            bg="#101a33",
-            fg=self.colors["pane_tl"],
-            activebackground="#162447",
-            activeforeground="#ffffff",
-            relief="flat",
-            command=self.toggle_launcher
-        )
+        # Left: Giri Launcher Trigger with Official Logo
+        self.logo_topbar_img = None
+        logo_icon_path = os.path.join(ROOT_DIR, "branding", "logo", "icons", "giri-os-icon-24.png")
+        if not os.path.isfile(logo_icon_path):
+            logo_icon_path = "/usr/share/pixmaps/giri-os-icon.png"
+        try:
+            if os.path.isfile(logo_icon_path):
+                pil_icon = Image.open(logo_icon_path).convert("RGBA").resize((20, 20), Image.Resampling.LANCZOS)
+                self.logo_topbar_img = ImageTk.PhotoImage(pil_icon)
+        except Exception:
+            pass
+
+        if self.logo_topbar_img:
+            self.btn_logo = tk.Button(
+                self.topbar,
+                image=self.logo_topbar_img,
+                text=" GIRI",
+                compound="left",
+                font=("Segoe UI", 10, "bold"),
+                bg="#101a33",
+                fg=self.colors["pane_tl"],
+                activebackground="#162447",
+                activeforeground="#ffffff",
+                relief="flat",
+                padx=6,
+                command=self.toggle_launcher
+            )
+        else:
+            self.btn_logo = tk.Button(
+                self.topbar,
+                text=" G GIRI ",
+                font=("Segoe UI", 10, "bold"),
+                bg="#101a33",
+                fg=self.colors["pane_tl"],
+                activebackground="#162447",
+                activeforeground="#ffffff",
+                relief="flat",
+                command=self.toggle_launcher
+            )
         self.btn_logo.pack(side="left", padx=8, pady=4)
 
         # Spaces (Virtual Desktops) Selector
@@ -388,7 +415,7 @@ class GiriSpaceDesktop(tk.Tk):
         self.dock_frame.place(relx=0.5, rely=1.0, anchor="s", y=-14, width=dock_width, height=dock_height)
 
         self.dock_items = [
-            ("⊞", "Giri Launch", self.toggle_launcher),
+            ("G", "Giri Launch", self.toggle_launcher),
             ("📁", "Giri Files", lambda: self.launch_app("Giri Files")),
             ("🌉", "Giri Bridge", lambda: self.launch_app("Giri Bridge")),
             ("🎮", "Giri Gaming", lambda: self.launch_app("Giri Gaming")),
@@ -405,9 +432,9 @@ class GiriSpaceDesktop(tk.Tk):
             btn = tk.Button(
                 f,
                 text=icon,
-                font=("Segoe UI", 14 if icon == "⊞" else 15),
+                font=("Segoe UI", 14, "bold") if icon == "G" else ("Segoe UI", 15),
                 bg=self.colors["dock_bg"],
-                fg=self.colors["pane_tl"] if icon == "⊞" else "#ffffff",
+                fg=self.colors["pane_tl"] if icon == "G" else "#ffffff",
                 activebackground="#16223d",
                 activeforeground=self.colors["pane_tl"],
                 relief="flat",

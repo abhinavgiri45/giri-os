@@ -184,18 +184,16 @@ class GiriWelcomeExperience(tk.Tk):
         self.animation_running = False
         self.transition_to_wizard()
 
-    def draw_orbital_emblem(self, progress=1.0):
+    def draw_genesis_emblem(self, progress=1.0):
         """
-        Renders the signature Giri OS orbital emblem dynamically on the canvas.
+        Renders the signature Giri OS Genesis emblem on the canvas.
         Progress scale: 0.0 to 1.0 (blooming scale).
         """
         self.canvas.delete("emblem")
         scale = max(0.2, min(1.0, progress))
-        radius_x = int(120 * scale)
-        radius_y = int(45 * scale)
         cy_offset = self.cy - int(80 * scale)
 
-        # Ambient Glow Oval
+        # Ambient Glow Oval (#0F172A)
         glow_rx = int(140 * scale)
         glow_ry = int(60 * scale)
         self.canvas.create_oval(
@@ -204,71 +202,67 @@ class GiriWelcomeExperience(tk.Tk):
             fill="#0F172A", outline="", tags="emblem"
         )
 
-        # Outer Orbital Orbit Ring
-        self.canvas.create_oval(
-            self.cx - radius_x, cy_offset - radius_y,
-            self.cx + radius_x, cy_offset + radius_y,
-            outline="#9333EA", width=max(1, int(3 * scale)),
-            tags="emblem"
-        )
+        # Try displaying official raster logo sprite if available
+        logo_loaded = False
+        try:
+            from PIL import Image, ImageTk
+            logo_path = os.path.join(CURRENT_DIR, "..", "..", "branding", "logo", "giri-os-icon.png")
+            if not os.path.isfile(logo_path):
+                logo_path = "/usr/share/pixmaps/giri-os-icon.png"
+            if os.path.isfile(logo_path):
+                target_size = max(32, int(160 * scale))
+                if not hasattr(self, "_cached_logo_img") or getattr(self, "_cached_logo_size", 0) != target_size:
+                    pil_img = Image.open(logo_path).convert("RGBA")
+                    pil_img = pil_img.resize((target_size, target_size), Image.Resampling.LANCZOS)
+                    self._cached_logo_tk = ImageTk.PhotoImage(pil_img)
+                    self._cached_logo_size = target_size
+                self.canvas.create_image(self.cx, cy_offset, image=self._cached_logo_tk, tags="emblem")
+                logo_loaded = True
+        except Exception:
+            logo_loaded = False
 
-        # Forefront Cyan Energy Arc
-        self.canvas.create_arc(
-            self.cx - radius_x, cy_offset - radius_y,
-            self.cx + radius_x, cy_offset + radius_y,
-            start=190, extent=160,
-            outline="#00F0FF", width=max(2, int(4 * scale)),
-            style="arc", tags="emblem"
-        )
+        if not logo_loaded:
+            # Procedural Vector 'G' Monogram Fallback
+            g_size = int(42 * scale)
+            # Upper Canopy (Electric Blue)
+            self.canvas.create_line(
+                self.cx - g_size, cy_offset - g_size,
+                self.cx + g_size, cy_offset - g_size,
+                fill="#00D2FF", width=max(2, int(7 * scale)),
+                capstyle="round", tags="emblem"
+            )
+            # Left Spine (Electric Blue to Azure)
+            self.canvas.create_line(
+                self.cx - g_size, cy_offset - g_size,
+                self.cx - g_size, cy_offset + g_size,
+                fill="#00D2FF", width=max(2, int(7 * scale)),
+                capstyle="round", tags="emblem"
+            )
+            # Foundation & Crossbar
+            self.canvas.create_line(
+                self.cx - g_size, cy_offset + g_size,
+                self.cx + g_size, cy_offset + g_size,
+                fill="#3B82F6", width=max(2, int(7 * scale)),
+                capstyle="round", tags="emblem"
+            )
+            self.canvas.create_line(
+                self.cx + g_size, cy_offset + g_size,
+                self.cx + g_size, cy_offset,
+                fill="#3B82F6", width=max(2, int(7 * scale)),
+                capstyle="round", tags="emblem"
+            )
+            self.canvas.create_line(
+                self.cx, cy_offset,
+                self.cx + g_size, cy_offset,
+                fill="#00D2FF", width=max(2, int(7 * scale)),
+                capstyle="round", tags="emblem"
+            )
 
-        # Orbital Satellite Node (Particle)
-        node_x = self.cx + int(radius_x * 0.88)
-        node_y = cy_offset - int(radius_y * 0.45)
-        nr = max(3, int(6 * scale))
-        self.canvas.create_oval(
-            node_x - nr, node_y - nr,
-            node_x + nr, node_y + nr,
-            fill="#00F0FF", outline="#FFFFFF", width=1, tags="emblem"
-        )
-
-        # Central Stylized G Monogram
-        g_size = int(42 * scale)
-        # Upper Canopy
-        self.canvas.create_line(
-            self.cx - g_size, cy_offset - g_size,
-            self.cx + g_size, cy_offset - g_size,
-            fill="#00F0FF", width=max(2, int(7 * scale)),
-            capstyle="round", tags="emblem"
-        )
-        # Left Spine
-        self.canvas.create_line(
-            self.cx - g_size, cy_offset - g_size,
-            self.cx - g_size, cy_offset + g_size,
-            fill="#00F0FF", width=max(2, int(7 * scale)),
-            capstyle="round", tags="emblem"
-        )
-        # Foundation & Crossbar
-        self.canvas.create_line(
-            self.cx - g_size, cy_offset + g_size,
-            self.cx + g_size, cy_offset + g_size,
-            fill="#C084FC", width=max(2, int(7 * scale)),
-            capstyle="round", tags="emblem"
-        )
-        self.canvas.create_line(
-            self.cx + g_size, cy_offset + g_size,
-            self.cx + g_size, cy_offset,
-            fill="#C084FC", width=max(2, int(7 * scale)),
-            capstyle="round", tags="emblem"
-        )
-        self.canvas.create_line(
-            self.cx, cy_offset,
-            self.cx + g_size, cy_offset,
-            fill="#00F0FF", width=max(2, int(7 * scale)),
-            capstyle="round", tags="emblem"
-        )
+    # Backward compatibility alias
+    draw_orbital_emblem = draw_genesis_emblem
 
     def start_intro_animation(self):
-        """Phase 1: Bloom the orbital emblem into view."""
+        """Phase 1: Bloom the official Giri OS emblem into view."""
         self.anim_step = 0
         self.animate_bloom()
 
@@ -277,7 +271,7 @@ class GiriWelcomeExperience(tk.Tk):
             return
         self.anim_step += 1
         progress = self.anim_step / 20.0
-        self.draw_orbital_emblem(progress)
+        self.draw_genesis_emblem(progress)
 
         if self.anim_step < 20:
             self.after(25, self.animate_bloom)

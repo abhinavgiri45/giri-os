@@ -91,7 +91,7 @@ fi
 # 4. Stage Chroot Overlays (Branding, Themes, Desktop, Core Services)
 echo "[+] Staging Giri OS branding and desktop components into chroot overlays..."
 INCLUDES_CHROOT="${LIVE_BUILD_DIR}/config/includes.chroot"
-mkdir -p "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-orbit"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-genesis"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/grub/themes/giri"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/backgrounds/thumbnails"
 mkdir -p "${INCLUDES_CHROOT}/usr/share/pixmaps"
@@ -121,7 +121,7 @@ cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.svg" "${INCLUDES_CHROOT}/usr/s
 cp -f "${PROJECT_ROOT}/branding/logo/giri-os-icon.png" "${INCLUDES_CHROOT}/usr/share/icons/hicolor/48x48/apps/giri-os-icon.png" || true
 
 # 4b. Copy Plymouth Theme
-cp -rf "${PROJECT_ROOT}/boot/plymouth/giri-orbit/"* "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-orbit/"
+cp -rf "${PROJECT_ROOT}/boot/plymouth/giri-genesis/"* "${INCLUDES_CHROOT}/usr/share/plymouth/themes/giri-genesis/"
 
 # 4c. Copy GRUB Theme
 cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_CHROOT}/usr/share/grub/themes/giri/"
@@ -261,12 +261,13 @@ if [[ -z "${ISO_OUTPUT}" || ! -f "${ISO_OUTPUT}" ]]; then
 fi
 
 mkdir -p "${RELEASES_DIR}"
-TARGET_ISO="${RELEASES_DIR}/giri-os-0.1-genesis-amd64.iso"
+ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v2-amd64.iso}"
+TARGET_ISO="${RELEASES_DIR}/${ISO_FILENAME}"
 mv -f "${ISO_OUTPUT}" "${TARGET_ISO}"
 
 echo "[+] Computing SHA-256 checksum..."
 cd "${RELEASES_DIR}"
-sha256sum "giri-os-0.1-genesis-amd64.iso" > "SHA256SUMS.txt"
+sha256sum "${ISO_FILENAME}" > "SHA256SUMS.txt"
 cp -f "SHA256SUMS.txt" "SHA256SUMS"
 
 ISO_SIZE_BYTES=$(stat -c%s "${TARGET_ISO}")

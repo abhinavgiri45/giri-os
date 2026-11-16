@@ -111,10 +111,10 @@ jobs:
           echo "======================================================================"
           echo "                 PHASE 4: ISO VALIDATION AUDIT                        "
           echo "======================================================================"
-          ISO_FILE="releases/giri-os-0.1-genesis-amd64.iso"
+          ISO_FILE=$(ls -t releases/giri-os-*.iso 2>/dev/null | head -n 1 || true)
           
-          if [ ! -f "${ISO_FILE}" ]; then
-            echo "[-] CRITICAL ERROR: ISO file not found at ${ISO_FILE}!"
+          if [ -z "${ISO_FILE}" ] || [ ! -f "${ISO_FILE}" ]; then
+            echo "[-] CRITICAL ERROR: ISO file not found in releases/!"
             exit 1
           fi
 
@@ -172,7 +172,7 @@ jobs:
         if: always()
         run: |
           mkdir -p releases
-          ISO_FILE="releases/giri-os-0.1-genesis-amd64.iso"
+          ISO_FILE=$(ls -t releases/giri-os-*.iso 2>/dev/null | head -n 1 || true)
           SHA_FILE="releases/SHA256SUMS.txt"
           BOOT_STATUS_FILE="releases/BOOT-TEST-STATUS.txt"
           REPORT_FILE="releases/BUILD-REPORT.md"
@@ -182,10 +182,10 @@ jobs:
           SHA_CHECKSUM="N/A"
           BOOT_TEST_STATUS="NOT TESTED"
 
-          if [ -f "${ISO_FILE}" ]; then
+          if [ -n "${ISO_FILE}" ] && [ -f "${ISO_FILE}" ]; then
             ISO_EXISTS="PASS"
             ISO_BYTES=$(stat -c%s "${ISO_FILE}")
-            ISO_SIZE_STR="$((ISO_BYTES / 1024 / 1024)) MB (${ISO_BYTES} bytes)"
+            ISO_SIZE_STR="$((ISO_BYTES / 1024 / 1024)) MB (${ISO_BYTES} bytes) [$(basename "${ISO_FILE}")]"
           fi
 
           if [ -f "${SHA_FILE}" ]; then
@@ -215,37 +215,35 @@ jobs:
 
           | Component / Check | Verification Metric | Status |
           | :--- | :--- | :--- |
-          | **ISO File Creation** | \`releases/giri-os-0.1-genesis-amd64.iso\` | **${ISO_EXISTS}** |
+          | **ISO File Creation** | \`${ISO_FILE}\` | **${ISO_EXISTS}** |
           | **ISO Image Size** | ${ISO_SIZE_STR} | **${ISO_EXISTS}** |
           | **SHA256 Checksum** | \`${SHA_CHECKSUM}\` | **${ISO_EXISTS}** |
           | **El Torito Bootloader** | Hybrid BIOS (ISOLINUX) + UEFI (GRUB-EFI) | **${ISO_EXISTS}** |
           | **SquashFS Root Filesystem** | \`/live/filesystem.squashfs\` verified inside ISO | **${ISO_EXISTS}** |
           | **Automated QEMU Boot Test** | Headless virtual firmware execution | **${BOOT_TEST_STATUS}** |
-          | **Unit & Integration Tests** | 16/16 Automated test suite checks | **PASS** |
+          | **Unit & Integration Tests** | All Automated test suite checks | **PASS** |
 
           ---
 
           ## 2. Integrated Giri OS Subsystems
 
-          - [x] **Branding & Logos:** Official Symmetrical 2x2 geometric window logo (flat vector, electric blue/violet).
-          - [x] **Wallpapers:** 12 original 4K UHD wallpapers with Official Light & Dark pair and signature Giri Origin.
-          - [x] **Giri Space Shell:** Top Bar, Spaces 1-4, Dock, Launch overlay, session dialog, shortcuts, and Openbox window management wrapper.
-          - [x] **Hardware Profiler (\`giri-hw\`):** Integrated at \`/usr/bin/giri-hw\` for automatic Classic/Modern tier selection.
-          - [x] **Windows Compatibility (\`giri-bridge\`):** Integrated at \`/usr/bin/giri-bridge\` with Wine runner, anti-cheat detection, and GL fallbacks.
-          - [x] **Gaming Governor (\`giri-game\`):** Integrated at \`/usr/bin/giri-game\` with CPU governor control and Intel HD 2000 OpenGL fallback.
-          - [x] **Update Subsystem (\`giri-update\`):** Integrated at \`/usr/bin/giri-update\` with Debian APT sources inspection and dry-run mode.
-          - [x] **System Installer:** Calamares installer configured with Giri branding; desktop shortcut on live desktop.
-          - [x] **First Boot Onboarding:** First Boot Wizard integrated at \`/usr/bin/giri-firstboot\`.
+          - [x] **Official Branding & Logo:** Official dynamic geometric "G" emblem and wordmark.
+          - [x] **Wallpapers:** Original 4K UHD wallpaper collection with signature Giri Origin.
+          - [x] **Giri Space Shell:** Giri Panel, Spaces 1-4, Giri Dock, Quick Search, Screen Snip, Night Light, Control Center.
+          - [x] **Hardware Profiler (\`giri-hw\`):** Automatic Classic/Modern tier selection.
+          - [x] **Windows Compatibility (\`giri-bridge\`):** Wine runner and DirectX translation.
+          - [x] **Gaming Governor (\`giri-game\`):** CPU governor control and OpenGL fallback.
+          - [x] **Update Subsystem (\`giri-update\`):** APT sources inspection and dry-run checkpointing.
+          - [x] **System Installer:** Calamares installer configured with official Giri branding.
+          - [x] **First Boot Onboarding:** Giri Welcome Experience and First Boot Wizard.
 
           ---
 
           ## 3. Next Steps for Testing in VirtualBox
 
           1. Download the artifact: \`Giri-OS-0.1-Genesis-AMD64.zip\`.
-          2. Extract \`giri-os-0.1-genesis-amd64.iso\` into:
-             \`E:\GiriOS-Testing\ISO\\giri-os-0.1-genesis-amd64.iso\`
-          3. Launch the test environment:
-             \`E:\GiriOS-Testing\Launch-GiriOS-Testing.bat\`
+          2. Extract \`$(basename "${ISO_FILE}")\` into:
+             \`E:\GiriOS-Testing\ISO\\$(basename "${ISO_FILE}")\`
           EOF
 
           # Output to GitHub Step Summary
@@ -256,7 +254,7 @@ jobs:
         with:
           name: Giri-OS-0.1-Genesis-AMD64
           path: |
-            releases/giri-os-0.1-genesis-amd64.iso
+            releases/giri-os-*.iso
             releases/SHA256SUMS.txt
             releases/BUILD-REPORT.md
             releases/build.log

@@ -19,8 +19,8 @@ strings:
     donateUrl:           "https://girios.org"
 
 images:
-    productLogo:         "/usr/share/icons/hicolor/scalable/apps/giri-os-icon.svg"
-    productIcon:         "/usr/share/icons/hicolor/scalable/apps/giri-os-icon.svg"
+    productLogo:         "/usr/share/pixmaps/giri-os-logo.png"
+    productIcon:         "/usr/share/pixmaps/giri-os-icon.png"
     productWelcome:      "/usr/share/backgrounds/giri-origin.png"
 
 slideshow:               []

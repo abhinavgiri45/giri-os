@@ -759,6 +759,21 @@ class GiriControlCenter(tk.Toplevel):
     # 4. Hardware & System Specifications
     # =========================================================================
     def view_hardware(self):
+        # Official Giri OS Logo Banner
+        logo_path = os.path.join(ROOT_DIR, "branding", "logo", "giri-os-logo.png")
+        if not os.path.isfile(logo_path):
+            logo_path = "/usr/share/pixmaps/giri-os-logo.png"
+        if os.path.isfile(logo_path):
+            try:
+                pil_logo = Image.open(logo_path).convert("RGBA")
+                target_w = 240
+                target_h = int(target_w * pil_logo.height / pil_logo.width)
+                pil_logo = pil_logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
+                self.logo_tk = ImageTk.PhotoImage(pil_logo)
+                tk.Label(self.content, image=self.logo_tk, bg="#080c1a").pack(anchor="w", pady=(0, 10))
+            except Exception:
+                pass
+
         tk.Label(self.content, text="Hardware & System Specifications", font=("Segoe UI", 18, "bold"), fg="#ffffff", bg="#080c1a").pack(anchor="w", pady=(0, 15))
 
         card = tk.Frame(self.content, bg="#0f172a", padx=18, pady=16)
