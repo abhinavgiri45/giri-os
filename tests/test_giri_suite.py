@@ -43,6 +43,9 @@ updater_mod = load_module("client", "updater/giri-update/client.py")
 control_mod = load_module("control_center", "desktop/giri-space/control-center/control_center.py")
 runner_mod = load_module("runner", "compatibility/giri-bridge/runner.py")
 welcome_mod = load_module("giri_welcome", "installer/first-boot/giri_welcome.py")
+search_mod = load_module("quick_search", "desktop/giri-space/launcher/quick_search.py")
+snip_mod = load_module("giri_snip", "desktop/giri-space/shortcuts/giri_snip.py")
+nightlight_mod = load_module("giri_nightlight", "desktop/giri-space/shell/giri_nightlight.py")
 
 HardwareDetector = hw_mod.HardwareDetector
 GiriFirstBootWizard = wizard_mod.GiriFirstBootWizard
@@ -54,6 +57,9 @@ GiriUpdateClient = updater_mod.GiriUpdateClient
 GiriControlCenter = control_mod.GiriControlCenter
 WineRunner = runner_mod.WineRunner
 GiriWelcomeExperience = welcome_mod.GiriWelcomeExperience
+GiriQuickSearch = search_mod.GiriQuickSearch
+safe_calculate = search_mod.safe_calculate
+GiriSnipTool = snip_mod.GiriSnipTool
 
 
 class TestGiriOSCore(unittest.TestCase):
@@ -344,6 +350,95 @@ class TestGiriOSCore(unittest.TestCase):
         # Clean up
         wizard_mod.FLAG_FILE = orig_flag
         shutil.rmtree(test_flag_dir, ignore_errors=True)
+
+    def test_24_quick_search_and_calculator(self):
+        # 1. Test safe_calculate math evaluation
+        self.assertEqual(safe_calculate("2 + 2"), "= 4")
+        self.assertEqual(safe_calculate("10 * 5"), "= 50")
+        self.assertEqual(safe_calculate("sqrt(144)"), "= 12")
+        self.assertEqual(safe_calculate("sin(0)"), "= 0")
+        self.assertEqual(safe_calculate("cos(0)"), "= 1")
+        # Test security sanitization - must reject arbitrary/malicious expressions
+        self.assertIsNone(safe_calculate("__import__('os').system('ls')"))
+        self.assertIsNone(safe_calculate("open('/etc/passwd')"))
+        self.assertIsNone(safe_calculate("exec('x=1')"))
+
+        # 2. Test application indexing
+        apps = search_mod.get_installed_applications()
+        self.assertIsInstance(apps, list)
+        self.assertTrue(len(apps) > 0)
+        self.assertTrue(any("Giri Control" in a.get("name", "") or "install" in a.get("exec", "").lower() for a in apps))
+
+        # 3. Test GiriQuickSearch instantiation
+        qs = GiriQuickSearch(non_interactive=True)
+        self.assertIsNotNone(qs.entry_query)
+        self.assertEqual(qs.title(), "Giri Quick Search")
+        qs.destroy()
+
+    def test_25_screen_snip_utility(self):
+        # 1. Test capture_fullscreen output
+        tmp_snip = os.path.join(ROOT_DIR, "tests", "temp_snip_test.png")
+        if os.path.exists(tmp_snip):
+            os.remove(tmp_snip)
+        res = snip_mod.capture_fullscreen(tmp_snip)
+        # Verify file is generated or captured
+        if res:
+            self.assertTrue(os.path.isfile(tmp_snip))
+            with Image.open(tmp_snip) as im:
+                self.assertGreater(im.width, 0)
+                self.assertGreater(im.height, 0)
+            os.remove(tmp_snip)
+
+        # 2. Test GiriSnipTool instantiation
+        snip = GiriSnipTool(non_interactive=True)
+        self.assertEqual(snip.title(), "Giri Snip")
+        snip.destroy()
+
+    def test_26_nightlight_governor(self):
+        # 1. Test preset dictionary
+        presets = nightlight_mod.TEMPERATURE_PRESETS
+        self.assertIn("day", presets)
+        self.assertIn("sunset", presets)
+        self.assertIn("warm", presets)
+        self.assertIn("bedtime", presets)
+        self.assertEqual(presets["day"]["gamma"], "1.0:1.0:1.0")
+        self.assertEqual(presets["warm"]["gamma"], "1.0:0.78:0.60")
+
+        # 2. Test setting preset updates config
+        res = nightlight_mod.set_preset("warm")
+        self.assertTrue(res)
+        cfg = nightlight_mod.load_config()
+        self.assertEqual(cfg["current_preset"], "warm")
+        self.assertTrue(cfg["enabled"])
+
+        # Reset back to daylight
+        nightlight_mod.set_preset("day")
+        cfg_day = nightlight_mod.load_config()
+        self.assertEqual(cfg_day["current_preset"], "day")
+        self.assertFalse(cfg_day["enabled"])
+
+    def test_27_control_center_specs_export_and_dnd(self):
+        cc = GiriControlCenter(non_interactive=True)
+
+        # 1. Test formatted hardware specs string
+        specs_text = cc.get_formatted_specs()
+        self.assertIn("GIRI OS 0.1 GENESIS", specs_text)
+        self.assertIn("CPU:", specs_text)
+        self.assertIn("RAM:", specs_text)
+        self.assertIn("GPU:", specs_text)
+        self.assertIn("Tier:", specs_text)
+
+        # 2. Test DND mode toggle
+        initial_dnd = getattr(cc, "dnd_active", False)
+        cc.toggle_dnd_mode()
+        self.assertNotEqual(getattr(cc, "dnd_active", False), initial_dnd)
+        cc.toggle_dnd_mode()
+        self.assertEqual(getattr(cc, "dnd_active", False), initial_dnd)
+
+        # 3. Test nightlight trigger
+        cc.set_nightlight("day")
+
+        cc.destroy()
 
 
 if __name__ == "__main__":

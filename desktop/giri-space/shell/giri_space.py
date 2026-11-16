@@ -172,6 +172,14 @@ class GiriSpaceDesktop(tk.Tk):
         # Settings shortcut: Super+C or Alt+C
         self.bind_all("<Alt-c>", lambda e: self.open_control_center())
 
+        # Universal Quick Search shortcut: Alt+Space or Ctrl+Space
+        self.bind_all("<Alt-space>", lambda e: self.launch_quick_search())
+        self.bind_all("<Control-space>", lambda e: self.launch_quick_search())
+
+        # Screen Snip shortcut: PrintScreen or Alt+S
+        self.bind_all("<Print>", lambda e: self.launch_screen_snip())
+        self.bind_all("<Alt-s>", lambda e: self.launch_screen_snip())
+
     def close_all_overlays(self):
         if self.launcher_open:
             self.toggle_launcher()
@@ -688,6 +696,15 @@ class GiriSpaceDesktop(tk.Tk):
         if "Control" in name:
             self.open_control_center()
             return
+        if "Search" in name:
+            self.launch_quick_search()
+            return
+        if "Snip" in name:
+            self.launch_screen_snip()
+            return
+        if "Night" in name:
+            self.toggle_night_light()
+            return
 
         # Attempt real process execution with fallbacks
         app_commands = {
@@ -723,6 +740,44 @@ class GiriSpaceDesktop(tk.Tk):
             GiriControlCenter(self)
         else:
             messagebox.showinfo("Giri Control", "Opening Giri Control Center...")
+
+    def launch_quick_search(self):
+        """Launches the universal HUD search and calculator runner."""
+        search_script = os.path.join(ROOT_DIR, "desktop", "giri-space", "launcher", "quick_search.py")
+        if os.path.isfile(search_script):
+            try:
+                subprocess.Popen([sys.executable, search_script])
+            except Exception as e:
+                print(f"Error launching quick search: {e}")
+
+    def launch_screen_snip(self):
+        """Launches the interactive screen snipping tool."""
+        snip_script = os.path.join(ROOT_DIR, "desktop", "giri-space", "shortcuts", "giri_snip.py")
+        if os.path.isfile(snip_script):
+            try:
+                subprocess.Popen([sys.executable, snip_script])
+            except Exception as e:
+                print(f"Error launching screen snip: {e}")
+
+    def toggle_night_light(self):
+        """Toggles circadian display color temperature (Daylight vs Warm Night)."""
+        nl_script = os.path.join(ROOT_DIR, "desktop", "giri-space", "shell", "giri_nightlight.py")
+        if os.path.isfile(nl_script):
+            try:
+                subprocess.run([sys.executable, nl_script, "--toggle"], check=False)
+            except Exception as e:
+                print(f"Error toggling night light: {e}")
+
+    def toggle_dnd(self):
+        """Toggles Do Not Disturb (Focus Mode) to mute desktop notifications."""
+        self.dnd_active = not getattr(self, "dnd_active", False)
+        if shutil.which("dunstctl"):
+            try:
+                subprocess.run(["dunstctl", "set-paused", "true" if self.dnd_active else "false"], check=False)
+            except Exception:
+                pass
+        mode_str = "Enabled (Notifications Paused)" if self.dnd_active else "Disabled (Notifications Active)"
+        print(f"[+] Do Not Disturb: {mode_str}")
 
     # =========================================================================
     # Session Management & Power Actions

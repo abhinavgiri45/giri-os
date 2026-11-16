@@ -1,0 +1,17 @@
+{
+  "language": "English (United States)",
+  "region": "India (IN)",
+  "keyboard": "US Standard (QWERTY)",
+  "network_mode": "Offline",
+  "timezone": "Asia/Kolkata (IST +5:30)",
+  "username": "giri",
+  "fullname": "Giri OS User",
+  "password_hash": "",
+  "sudo_access": true,
+  "theme_mode": "Dark",
+  "wallpaper_choice": "giri-os-default-dark.png",
+  "privacy_telemetry": false,
+  "privacy_crash_reports": false,
+  "desktop_theme": "Classic",
+  "hardware_tier": "Classic"
+}

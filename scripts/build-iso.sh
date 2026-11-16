@@ -143,6 +143,30 @@ exec python3 /usr/lib/giri/first-boot/first_boot_wizard.py "$@"
 EOF
 chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-firstboot"
 
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-search"
+#!/bin/sh
+exec python3 /usr/share/giri-space/launcher/quick_search.py "$@"
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-search"
+
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-snip"
+#!/bin/sh
+exec python3 /usr/share/giri-space/shortcuts/giri_snip.py "$@"
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-snip"
+
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-nightlight"
+#!/bin/sh
+exec python3 /usr/share/giri-space/shell/giri_nightlight.py "$@"
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-nightlight"
+
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-control"
+#!/bin/sh
+exec python3 /usr/share/giri-space/control-center/control_center.py "$@"
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-control"
+
 # 4f. Copy Calamares Installer Settings & Modules
 cp -f "${PROJECT_ROOT}/installer/calamares/settings.conf" "${INCLUDES_CHROOT}/etc/calamares/" || true
 cp -rf "${PROJECT_ROOT}/installer/calamares/modules/"* "${INCLUDES_CHROOT}/etc/calamares/modules/" || true

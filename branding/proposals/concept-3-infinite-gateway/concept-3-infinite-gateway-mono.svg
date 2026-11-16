@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 220" width="100%" height="100%">
+  
+  <!-- Brand Symbol -->
+  <g transform="translate(35, 10)">
+    <g id="symbol-concept-3" >
+      <defs></defs>
+      <!-- Facet 1: Top Canopy (Cyan Horizon) -->
+      <path d="M 100,24 L 170,64 L 138,82 L 100,60 L 62,82 L 30,64 Z" fill="#000000" />
+      <!-- Facet 2: Left Pillar (Cobalt Anchor) -->
+      <path d="M 30,64 L 62,82 L 62,142 L 30,160 Z" fill="#333333" />
+      <!-- Facet 3: Foundation & Core Crossbar (Electric Violet Gateway) -->
+      <path d="
+    M 30,160 
+    L 62,142 
+    L 100,164 
+    L 138,142 
+    L 138,106 
+    L 94,106 
+    L 94,86 
+    L 168,86 
+    L 168,160 
+    L 100,200 
+    Z
+    " fill="#666666" />
+    </g>
+  </g>
+  <!-- Wordmark Section -->
+  <g transform="translate(265, 30)">
+    <!-- Main Title -->
+    <text x="0" y="78" font-family="'Inter', 'Space Grotesk', -apple-system, sans-serif" font-weight="800" font-size="76" letter-spacing="6">
+      <tspan fill="#000000">GIRI</tspan>
+      <tspan dx="14" fill="#000000">OS</tspan>
+    </text>
+    <!-- Divider Bar -->
+    <rect x="2" y="98" width="480" height="2.5" rx="1.2" fill="#000000" />
+    <!-- Tagline -->
+    <text x="3" y="128" font-family="'Inter', 'Space Grotesk', -apple-system, sans-serif" font-weight="600" font-size="14" letter-spacing="6" fill="#333333">ONE SYSTEM. INFINITE POSSIBILITIES.</text>
+  </g>
+</svg>

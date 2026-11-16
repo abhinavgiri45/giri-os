@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giri OS — Brand Identity Distinctiveness Audit & Concept Showcase</title>
+  <style>
+    :root {
+      --bg: #070913;
+      --card-bg: #0E1322;
+      --card-border: #1E293B;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+      --cyan: #00F0FF;
+      --blue: #0066FF;
+      --violet: #9D4EDD;
+      --danger: #EF4444;
+      --success: #10B981;
+      --warning: #F59E0B;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      padding: 40px 24px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, #00F0FF, #A855F7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .notice-badge {
+      display: inline-block;
+      margin-top: 14px;
+      padding: 6px 14px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #FCA5A5;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 999px;
+    }
+
+    section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 40px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 16px;
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    p {
+      color: var(--text-muted);
+      font-size: 15px;
+      margin-bottom: 16px;
+    }
+
+    /* Comparison Grid */
+    .comp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+
+    .comp-card {
+      background: #090D18;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .comp-card.flagged {
+      border-color: rgba(239, 68, 68, 0.6);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.1);
+    }
+
+    .comp-card h3 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      color: #F8FAFC;
+    }
+
+    .comp-card .visual-box {
+      background: #03050A;
+      border-radius: 8px;
+      padding: 24px;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .critique-list {
+      text-align: left;
+      font-size: 13.5px;
+      color: #CBD5E1;
+      list-style: none;
+    }
+
+    .critique-list li {
+      margin-bottom: 8px;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .critique-list li::before {
+      content: "⚠️";
+      position: absolute;
+      left: 0;
+      font-size: 12px;
+    }
+
+    /* Concept Section */
+    .concept-title {
+      font-size: 20px;
+      color: var(--cyan);
+      margin-top: 12px;
+      margin-bottom: 4px;
+    }
+
+    .concept-tagline {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #A855F7;
+      margin-bottom: 16px;
+    }
+
+    .variant-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .variant-card {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: #090D18;
+    }
+
+    .variant-header {
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--card-border);
+      background: #121829;
+      color: #94A3B8;
+    }
+
+    .variant-preview {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 140px;
+    }
+
+    .variant-preview.light-bg {
+      background: #FFFFFF;
+    }
+
+    .variant-preview.dark-bg {
+      background: #070913;
+    }
+
+    .variant-preview.mono-bg {
+      background: #181F30;
+    }
+
+    .scale-tester {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 16px;
+      background: #04060A;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .scale-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #64748B;
+    }
+
+    /* Score Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 24px;
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    th {
+      background: #121829;
+      color: #CBD5E1;
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    td {
+      color: #94A3B8;
+    }
+
+    .tag-danger {
+      color: #F87171;
+      font-weight: 700;
+    }
+    .tag-success {
+      color: #34D399;
+      font-weight: 700;
+    }
+    .tag-warning {
+      color: #FBBF24;
+      font-weight: 700;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>GIRI OS — BRAND IDENTITY DISTINCTIVENESS AUDIT</h1>
+      <div class="subtitle">Official Trademark & Visual Distinctiveness Comparative Analysis</div>
+      <div class="notice-badge">CRITICAL DESIGN FINDING: CURRENT 4-PANE LOGO SHARES CORE WINDOWS ARCHETYPE</div>
+    </header>
+
+    <!-- SECTION 1: COMPARATIVE AUDIT -->
+    <section>
+      <h2><span>🔍</span> 1. Visual Comparison: Current Giri OS Logo vs Microsoft Windows Logo</h2>
+      <p>
+        An audit of the current official Giri OS logo (<code>giri-os-logo.svg</code>, <code>giri-os-icon.svg</code>) reveals significant visual overlap with Microsoft's registered trademark trade dress (Windows 11, Windows 10, and Microsoft corporate branding).
+      </p>
+
+      <div class="comp-grid">
+        <!-- Microsoft Windows 11 -->
+        <div class="comp-card">
+          <h3>Microsoft Windows 11 Trademark</h3>
+          <div class="visual-box">
+            <!-- Exact Windows 11 Vector Silhouette -->
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <rect x="10" y="10" width="46" height="46" fill="#0078D4" />
+              <rect x="64" y="10" width="46" height="46" fill="#0078D4" />
+              <rect x="10" y="64" width="46" height="46" fill="#0078D4" />
+              <rect x="64" y="64" width="46" height="46" fill="#0078D4" />
+            </svg>
+          </div>
+          <ul class="critique-list">
+            <li><strong>Geometry:</strong> 4 symmetrical squares in a 2×2 Cartesian grid.</li>
+            <li><strong>Aspect Ratio:</strong> Exact 1:1 square bounding box.</li>
+            <li><strong>Negative Space:</strong> Symmetrical horizontal and vertical dividing cross.</li>
+            <li><strong>Monochrome/Silhouette:</strong> Collapses into 4 solid squares.</li>
+          </ul>
+        </div>
+
+        <!-- Current Giri OS -->
+        <div class="comp-card flagged">
+          <h3>Current Giri OS Symbol (Flagged)</h3>
+          <div class="visual-box">
+            <!-- Current Giri OS Vector Silhouette -->
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <rect x="10" y="10" width="46" height="46" rx="8" fill="#00D2FF" />
+              <rect x="64" y="10" width="46" height="46" rx="8" fill="#0066FF" />
+              <rect x="10" y="64" width="46" height="46" rx="8" fill="#7928CA" />
+              <rect x="64" y="64" width="46" height="46" rx="8" fill="#A855F7" />
+            </svg>
+          </div>
+          <ul class="critique-list">
+            <li><strong>Geometry:</strong> Identical 4-pane 2×2 formation; only slight rounding (<code>rx=8-12</code>).</li>
+            <li><strong>Silhouette Identity:</strong> In solid monochrome, it is virtually indistinguishable from Windows 11.</li>
+            <li><strong>Small-Scale Test:</strong> At 16×16 and 24×24, corner radii vanish; users perceive Windows.</li>
+            <li><strong>Market Perception:</strong> Risks being dismissed by Linux communities as a Windows knock-off.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; padding: 16px; background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--warning); border-radius: 4px;">
+        <strong style="color: #FCD34D;">Trademark & Distinctiveness Assessment:</strong>
+        <p style="margin: 4px 0 0 0; color: #E2E8F0; font-size: 14px;">
+          The current 4-pane arrangement does NOT possess sufficient distinctiveness in the operating system category. While the cyan-to-violet palette is differentiated, trademark protection and visual trade dress focus heavily on <em>silhouette, composition, and arrangement of shapes</em>. We explicitly advise transitioning Giri OS to an original monogram or cosmic identity before public release. (<em>Note: This audit is an expert distribution design analysis, not formal legal counsel.</em>)
+        </p>
+      </div>
+    </section>
+
+    <!-- SECTION 2: PROPOSED DIRECTION 1 -->
+    <section>
+      <h2><span>💎</span> Direction 1: The Precision G (Architectural Monogram)</h2>
+      <div class="concept-title">The Genesis Precision Glyph</div>
+      <div class="concept-tagline">Architectural • High-Velocity • Pure Identity</div>
+      <p>
+        Constructed from two interlocking high-tensile geometric segments forming an authoritative capital 'G'. An upper canopy sweeps across the top and down the spine, locking into an inward structural crossbar via a 45° diagonal velocity channel. Completely eliminates the 4-pane grid while asserting instant recognition.
+      </p>
+
+      <div class="variant-row">
+        <!-- Dark -->
+        <div class="variant-card">
+          <div class="variant-header">Dark Theme</div>
+          <div class="variant-preview dark-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <defs>
+                <linearGradient id="p1_a" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#00F0FF" /><stop offset="100%" stop-color="#0055FF" />
+                </linearGradient>
+                <linearGradient id="p1_b" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#C084FC" /><stop offset="100%" stop-color="#6B21A8" />
+                </linearGradient>
+              </defs>
+              <path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="url(#p1_a)" />
+              <path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="url(#p1_b)" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Light -->
+        <div class="variant-card">
+          <div class="variant-header">Light Theme</div>
+          <div class="variant-preview light-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="#0052CC" />
+              <path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="#7C3AED" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Mono -->
+        <div class="variant-card">
+          <div class="variant-header">Monochrome</div>
+          <div class="variant-preview mono-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="#FFFFFF" />
+              <path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="#FFFFFF" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Icon -->
+        <div class="variant-card">
+          <div class="variant-header">App Icon (256px)</div>
+          <div class="variant-preview dark-bg">
+            <svg width="120" height="120" viewBox="0 0 256 256">
+              <rect width="256" height="256" rx="56" fill="#0C111D" stroke="#1E293B" stroke-width="3" />
+              <g transform="translate(28, 28)">
+                <path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="#00F0FF" />
+                <path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="#A855F7" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="scale-tester">
+        <span style="font-size: 12px; color: #94A3B8; margin-right: 12px;">Small Scale Verification:</span>
+        <div class="scale-item">
+          <svg width="16" height="16" viewBox="0 0 200 200"><path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="#00F0FF" /><path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="#C084FC" /></svg>
+          16px
+        </div>
+        <div class="scale-item">
+          <svg width="24" height="24" viewBox="0 0 200 200"><path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="#00F0FF" /><path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="#C084FC" /></svg>
+          24px
+        </div>
+        <div class="scale-item">
+          <svg width="32" height="32" viewBox="0 0 200 200"><path d="M 55,20 L 165,20 L 165,55 L 75,55 L 75,135 L 40,170 L 20,150 L 20,55 Z" fill="#00F0FF" /><path d="M 52,182 L 87,147 L 87,165 L 145,165 L 145,105 L 105,105 L 105,75 L 180,75 L 180,200 L 34,200 Z" fill="#C084FC" /></svg>
+          32px
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: PROPOSED DIRECTION 2 -->
+    <section>
+      <h2><span>🪐</span> Direction 2: The Orbital Nexus (Celestial Horizon)</h2>
+      <div class="concept-title">The Planetary Event Horizon</div>
+      <div class="concept-tagline">Cosmic • Dynamic • Gravitational Aperture</div>
+      <p>
+        Features an inclined (-28°) orbital acceleration ring carrying an energy satellite node that loops through a central celestial G-core. Evokes the boundless reach of space, cosmic velocity, and planetary computing while preserving the electric cyan and violet aura.
+      </p>
+
+      <div class="variant-row">
+        <!-- Dark -->
+        <div class="variant-card">
+          <div class="variant-header">Dark Theme</div>
+          <div class="variant-preview dark-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <g transform="rotate(-28 100 100)">
+                <ellipse cx="100" cy="100" rx="92" ry="32" fill="none" stroke="#A855F7" stroke-width="4" stroke-dasharray="190 20 40 15" stroke-linecap="round" />
+                <circle cx="192" cy="100" r="5" fill="#00F0FF" />
+              </g>
+              <path d="M 148,68 C 134,44 112,34 88,38 C 54,44 32,74 32,108 C 32,144 58,172 98,172 C 138,172 166,144 166,108 L 166,98 L 98,98 L 98,122 L 138,122 C 134,136 118,150 96,150 C 72,150 56,132 56,108 C 56,84 72,62 96,58 C 114,56 130,66 140,80 Z" fill="#00F0FF" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Light -->
+        <div class="variant-card">
+          <div class="variant-header">Light Theme</div>
+          <div class="variant-preview light-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <g transform="rotate(-28 100 100)">
+                <ellipse cx="100" cy="100" rx="92" ry="32" fill="none" stroke="#6D28D9" stroke-width="4" stroke-dasharray="190 20 40 15" stroke-linecap="round" />
+                <circle cx="192" cy="100" r="5" fill="#0284C7" />
+              </g>
+              <path d="M 148,68 C 134,44 112,34 88,38 C 54,44 32,74 32,108 C 32,144 58,172 98,172 C 138,172 166,144 166,108 L 166,98 L 98,98 L 98,122 L 138,122 C 134,136 118,150 96,150 C 72,150 56,132 56,108 C 56,84 72,62 96,58 C 114,56 130,66 140,80 Z" fill="#0284C7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Mono -->
+        <div class="variant-card">
+          <div class="variant-header">Monochrome</div>
+          <div class="variant-preview mono-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <g transform="rotate(-28 100 100)">
+                <ellipse cx="100" cy="100" rx="92" ry="32" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-dasharray="190 20 40 15" stroke-linecap="round" />
+                <circle cx="192" cy="100" r="5" fill="#FFFFFF" />
+              </g>
+              <path d="M 148,68 C 134,44 112,34 88,38 C 54,44 32,74 32,108 C 32,144 58,172 98,172 C 138,172 166,144 166,108 L 166,98 L 98,98 L 98,122 L 138,122 C 134,136 118,150 96,150 C 72,150 56,132 56,108 C 56,84 72,62 96,58 C 114,56 130,66 140,80 Z" fill="#FFFFFF" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Icon -->
+        <div class="variant-card">
+          <div class="variant-header">App Icon (256px)</div>
+          <div class="variant-preview dark-bg">
+            <svg width="120" height="120" viewBox="0 0 256 256">
+              <rect width="256" height="256" rx="56" fill="#0C111D" stroke="#1E293B" stroke-width="3" />
+              <g transform="translate(28, 28)">
+                <g transform="rotate(-28 100 100)">
+                  <ellipse cx="100" cy="100" rx="92" ry="32" fill="none" stroke="#A855F7" stroke-width="4" stroke-dasharray="190 20 40 15" stroke-linecap="round" />
+                  <circle cx="192" cy="100" r="5" fill="#00F0FF" />
+                </g>
+                <path d="M 148,68 C 134,44 112,34 88,38 C 54,44 32,74 32,108 C 32,144 58,172 98,172 C 138,172 166,144 166,108 L 166,98 L 98,98 L 98,122 L 138,122 C 134,136 118,150 96,150 C 72,150 56,132 56,108 C 56,84 72,62 96,58 C 114,56 130,66 140,80 Z" fill="#00F0FF" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 4: PROPOSED DIRECTION 3 -->
+    <section>
+      <h2><span>♾️</span> Direction 3: The Infinite Gateway (Hexagonal Möbius G)</h2>
+      <div class="concept-title">The Möbius Hex-Prism</div>
+      <div class="concept-tagline">Infinite Possibilities • Impossible Geometry • Dimensional Depth</div>
+      <p>
+        Constructed from an isometric hexagonal ribbon folding continuously in 3 distinct illumination facets (Cyan Roof, Cobalt Left Pillar, Violet Crossbar). Forms an abstract, forward-leaning 'G' encircling an open portal. Symbolizes "ONE SYSTEM. INFINITE POSSIBILITIES."
+      </p>
+
+      <div class="variant-row">
+        <!-- Dark -->
+        <div class="variant-card">
+          <div class="variant-header">Dark Theme</div>
+          <div class="variant-preview dark-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <path d="M 100,24 L 170,64 L 138,82 L 100,60 L 62,82 L 30,64 Z" fill="#00F0FF" />
+              <path d="M 30,64 L 62,82 L 62,142 L 30,160 Z" fill="#3B82F6" />
+              <path d="M 30,160 L 62,142 L 100,164 L 138,142 L 138,106 L 94,106 L 94,86 L 168,86 L 168,160 L 100,200 Z" fill="#A855F7" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Light -->
+        <div class="variant-card">
+          <div class="variant-header">Light Theme</div>
+          <div class="variant-preview light-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <path d="M 100,24 L 170,64 L 138,82 L 100,60 L 62,82 L 30,64 Z" fill="#0284C7" />
+              <path d="M 30,64 L 62,82 L 62,142 L 30,160 Z" fill="#4F46E5" />
+              <path d="M 30,160 L 62,142 L 100,164 L 138,142 L 138,106 L 94,106 L 94,86 L 168,86 L 168,160 L 100,200 Z" fill="#9333EA" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Mono -->
+        <div class="variant-card">
+          <div class="variant-header">Monochrome</div>
+          <div class="variant-preview mono-bg">
+            <svg width="120" height="120" viewBox="0 0 200 200">
+              <path d="M 100,24 L 170,64 L 138,82 L 100,60 L 62,82 L 30,64 Z" fill="#FFFFFF" />
+              <path d="M 30,64 L 62,82 L 62,142 L 30,160 Z" fill="#CBD5E1" />
+              <path d="M 30,160 L 62,142 L 100,164 L 138,142 L 138,106 L 94,106 L 94,86 L 168,86 L 168,160 L 100,200 Z" fill="#94A3B8" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Icon -->
+        <div class="variant-card">
+          <div class="variant-header">App Icon (256px)</div>
+          <div class="variant-preview dark-bg">
+            <svg width="120" height="120" viewBox="0 0 256 256">
+              <rect width="256" height="256" rx="56" fill="#0C111D" stroke="#1E293B" stroke-width="3" />
+              <g transform="translate(28, 28)">
+                <path d="M 100,24 L 170,64 L 138,82 L 100,60 L 62,82 L 30,64 Z" fill="#00F0FF" />
+                <path d="M 30,64 L 62,82 L 62,142 L 30,160 Z" fill="#3B82F6" />
+                <path d="M 30,160 L 62,142 L 100,164 L 138,142 L 138,106 L 94,106 L 94,86 L 168,86 L 168,160 L 100,200 Z" fill="#A855F7" />
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: EVALUATION MATRIX -->
+    <section>
+      <h2><span>📊</span> 5. Strategic Evaluation & Distinctiveness Matrix</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Concept Candidate</th>
+            <th>Windows Distinctiveness</th>
+            <th>Originality Score</th>
+            <th>Icon Legibility (16px)</th>
+            <th>Brand Aesthetic Fit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Current Logo (4-Pane Grid)</strong></td>
+            <td class="tag-danger">CRITICAL CONFLICT (2×2 Quadrant)</td>
+            <td class="tag-danger">Very Low (Derivative)</td>
+            <td class="tag-danger">Poor (Indistinguishable)</td>
+            <td class="tag-warning">Generic Grid</td>
+            <td class="tag-danger">REPLACE</td>
+          </tr>
+          <tr>
+            <td><strong>Direction 1: Precision G</strong></td>
+            <td class="tag-success">100% DISTINCT (Zero Quadrants)</td>
+            <td class="tag-success">Very High (Architectural Monogram)</td>
+            <td class="tag-success">Outstanding (Bold Silhouette)</td>
+            <td class="tag-success">Engineering / Futuristic</td>
+            <td class="tag-success">RECOMMENDED #1</td>
+          </tr>
+          <tr>
+            <td><strong>Direction 2: Orbital Nexus</strong></td>
+            <td class="tag-success">100% DISTINCT (Orbital/Planetary)</td>
+            <td class="tag-success">High (Cosmic Event Horizon)</td>
+            <td class="tag-warning">Good (Fine ring needs tuning)</td>
+            <td class="tag-success">Cosmic / Atmospheric</td>
+            <td class="tag-success">STRONG ALTERNATIVE</td>
+          </tr>
+          <tr>
+            <td><strong>Direction 3: Infinite Gateway</strong></td>
+            <td class="tag-success">100% DISTINCT (Isometric Hexagon)</td>
+            <td class="tag-success">High (Möbius Ribbon)</td>
+            <td class="tag-success">Excellent (Solid Geometry)</td>
+            <td class="tag-success">Infinite Possibilities</td>
+            <td class="tag-success">EXCELLENT CANDIDATE</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>

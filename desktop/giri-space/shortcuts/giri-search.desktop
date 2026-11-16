@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Giri Quick Search
+Comment=Universal search, application launcher, and mathematical calculator HUD
+Exec=giri-search
+Icon=system-search
+Terminal=false
+Categories=Utility;Core;
+StartupNotify=true

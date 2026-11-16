@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 220" width="100%" height="100%">
+  <rect width="820" height="220" rx="16" fill="#FFFFFF" />
+  <!-- Brand Symbol -->
+  <g transform="translate(35, 10)">
+    <g id="symbol-concept-2" >
+      <defs>
+        <linearGradient id="c2_core_lt" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0284C7" />
+          <stop offset="100%" stop-color="#0369A1" />
+        </linearGradient>
+        <linearGradient id="c2_ring_lt" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#7C3AED" />
+          <stop offset="100%" stop-color="#0284C7" />
+        </linearGradient>
+        </defs>
+      
+      <!-- Inclined Orbital Acceleration Ring (-28 deg) -->
+      <g transform="rotate(-28 100 100)">
+        <ellipse cx="100" cy="100" rx="92" ry="32" fill="none" stroke="url(#c2_ring_lt)" stroke-width="4" stroke-dasharray="190 20 40 15" stroke-linecap="round" />
+        <!-- Orbital Satellite Node -->
+        <circle cx="192" cy="100" r="5.5" fill="#0284C7" />
+        <circle cx="192" cy="100" r="2.5" fill="#FFFFFF" />
+      </g>
+
+      <!-- Center Geometric 'G' Aperture Body -->
+      <!-- Smooth circular arc carving inward to form the G crossbar -->
+      <path d="M 148,68 
+               C 134,44 112,34 88,38 
+               C 54,44 32,74 32,108 
+               C 32,144 58,172 98,172 
+               C 138,172 166,144 166,108 
+               L 166,98 
+               L 98,98 
+               L 98,122 
+               L 138,122 
+               C 134,136 118,150 96,150 
+               C 72,150 56,132 56,108 
+               C 56,84 72,62 96,58 
+               C 114,56 130,66 140,80 
+               Z" 
+            fill="url(#c2_core_lt)" />
+
+      <!-- Forefront Orbital Arc crossing in front of the G -->
+      <g transform="rotate(-28 100 100)">
+        <path d="M 52,122 C 78,132 122,132 152,122" fill="none" stroke="#0284C7" stroke-width="4.5" stroke-linecap="round" />
+      </g>
+    </g>
+  </g>
+  <!-- Wordmark Section -->
+  <g transform="translate(265, 30)">
+    <!-- Main Title -->
+    <text x="0" y="78" font-family="'Inter', 'Space Grotesk', -apple-system, sans-serif" font-weight="800" font-size="76" letter-spacing="6">
+      <tspan fill="#0F172A">GIRI</tspan>
+      <tspan dx="14" fill="#0066FF">OS</tspan>
+    </text>
+    <!-- Divider Bar -->
+    <rect x="2" y="98" width="480" height="2.5" rx="1.2" fill="#0066FF" />
+    <!-- Tagline -->
+    <text x="3" y="128" font-family="'Inter', 'Space Grotesk', -apple-system, sans-serif" font-weight="600" font-size="14" letter-spacing="6" fill="#64748B">ONE SYSTEM. INFINITE POSSIBILITIES.</text>
+  </g>
+</svg>

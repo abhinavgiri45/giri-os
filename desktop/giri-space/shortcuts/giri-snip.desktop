@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Giri Screen Snip
+Comment=Screen capture and snip utility
+Exec=giri-snip
+Icon=applets-screenshooter
+Terminal=false
+Categories=Utility;Graphics;
+StartupNotify=true

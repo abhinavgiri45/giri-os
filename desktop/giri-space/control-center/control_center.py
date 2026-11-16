@@ -419,16 +419,19 @@ class GiriControlCenter(tk.Toplevel):
                     try:
                         pil_img = Image.open(thumb_path)
                         pil_img = pil_img.resize((240, 135), Image.Resampling.BILINEAR)
-                        self.thumb_cache[thumb_path] = ImageTk.PhotoImage(pil_img)
+                        self.thumb_cache[thumb_path] = ImageTk.PhotoImage(pil_img, master=self)
                     except Exception:
                         pass
                 photo = self.thumb_cache.get(thumb_path)
 
             if photo:
-                lbl_img = tk.Label(card, image=photo, bg="#0f172a", cursor="hand2")
-                lbl_img.image = photo
-                lbl_img.pack(side="top", pady=(0, 4))
-                lbl_img.bind("<Button-1>", lambda e, p=wp: self.select_wallpaper(p))
+                try:
+                    lbl_img = tk.Label(card, image=photo, bg="#0f172a", cursor="hand2")
+                    lbl_img.image = photo
+                    lbl_img.pack(side="top", pady=(0, 4))
+                    lbl_img.bind("<Button-1>", lambda e, p=wp: self.select_wallpaper(p))
+                except Exception:
+                    pass
 
             # Metadata Display
             name_text = f"★ {wp['name']}" if wp.get("is_official_default") else wp["name"]
@@ -640,6 +643,31 @@ class GiriControlCenter(tk.Toplevel):
         )
         btn_apply.grid(row=5, column=0, columnspan=2, sticky="w", pady=(12, 4))
 
+        # Night Light Card
+        nl_card = tk.Frame(self.content, bg="#0f172a", padx=18, pady=16)
+        nl_card.pack(fill="x", pady=10)
+
+        tk.Label(nl_card, text="🌙 Night Light & Circadian Eye Comfort", font=("Segoe UI", 12, "bold"), fg="#00d2ff", bg="#0f172a").pack(anchor="w")
+        tk.Label(nl_card, text="Shifts display color temperature to warmer tones to reduce eye strain in low-light environments.", font=("Segoe UI", 9), fg="#8ea4c8", bg="#0f172a").pack(anchor="w", pady=(2, 10))
+
+        btn_row = tk.Frame(nl_card, bg="#0f172a")
+        btn_row.pack(fill="x")
+
+        tk.Button(btn_row, text="☀ Daylight (6500K)", font=("Segoe UI", 9), bg="#1e293b", fg="#ffffff", relief="flat", padx=10, pady=4, command=lambda: self.set_nightlight("day")).pack(side="left", padx=3)
+        tk.Button(btn_row, text="🌅 Sunset (4500K)", font=("Segoe UI", 9), bg="#1e293b", fg="#ffffff", relief="flat", padx=10, pady=4, command=lambda: self.set_nightlight("sunset")).pack(side="left", padx=3)
+        tk.Button(btn_row, text="🌙 Warm Night (3500K)", font=("Segoe UI", 9, "bold"), bg="#0066ff", fg="#ffffff", relief="flat", padx=10, pady=4, command=lambda: self.set_nightlight("warm")).pack(side="left", padx=3)
+        tk.Button(btn_row, text="🕯 Bedtime (2800K)", font=("Segoe UI", 9), bg="#1e293b", fg="#ffffff", relief="flat", padx=10, pady=4, command=lambda: self.set_nightlight("bedtime")).pack(side="left", padx=3)
+
+    def set_nightlight(self, preset):
+        nl_script = os.path.join(ROOT_DIR, "desktop", "giri-space", "shell", "giri_nightlight.py")
+        if os.path.isfile(nl_script):
+            try:
+                subprocess.run([sys.executable, nl_script, f"--{preset}"], check=False)
+            except Exception:
+                pass
+        if not self.non_interactive:
+            messagebox.showinfo("Night Light", f"Color temperature adjusted to {preset.capitalize()} mode.")
+
     def apply_display_settings(self):
         self.desktop_prefs["resolution"] = self.res_var.get()
         self.desktop_prefs["refresh_rate"] = self.refresh_var.get()
@@ -757,6 +785,75 @@ class GiriControlCenter(tk.Toplevel):
         for i, (k, v) in enumerate(specs):
             tk.Label(card, text=k, font=("Segoe UI", 10, "bold"), fg="#8ea4c8", bg="#0f172a").grid(row=i, column=0, sticky="w", pady=4)
             tk.Label(card, text=v, font=("Segoe UI", 10), fg="#00d2ff" if "Tier" in k or "Vulkan" in k or "OS" in k else "#ffffff", bg="#0f172a").grid(row=i, column=1, sticky="w", padx=15, pady=4)
+
+        # Hardware Spec Actions
+        btn_box = tk.Frame(self.content, bg="#080c1a")
+        btn_box.pack(anchor="w", fill="x", pady=10)
+
+        tk.Button(
+            btn_box,
+            text="📋 Copy System Specs to Clipboard",
+            font=("Segoe UI", 9, "bold"),
+            bg="#0066ff",
+            fg="#ffffff",
+            activebackground="#0088ff",
+            relief="flat",
+            padx=14,
+            pady=6,
+            command=self.copy_hardware_specs
+        ).pack(side="left", padx=(0, 10))
+
+        tk.Button(
+            btn_box,
+            text="💾 Export Diagnostic Report",
+            font=("Segoe UI", 9),
+            bg="#16223d",
+            fg="#c2d5ee",
+            activebackground="#223359",
+            relief="flat",
+            padx=14,
+            pady=6,
+            command=self.export_hardware_report
+        ).pack(side="left")
+
+    def copy_hardware_specs(self):
+        text = self.get_formatted_specs()
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(text)
+            if not self.non_interactive:
+                messagebox.showinfo("Clipboard", "System hardware specifications copied to clipboard!")
+        except Exception:
+            pass
+
+    def export_hardware_report(self):
+        text = self.get_formatted_specs()
+        out_path = os.path.expanduser("~/giri-system-specs.txt")
+        try:
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(text)
+            if not self.non_interactive:
+                messagebox.showinfo("Exported", f"Hardware report exported to:\n{out_path}")
+        except Exception as e:
+            if not self.non_interactive:
+                messagebox.showerror("Error", f"Failed to export: {e}")
+
+    def get_formatted_specs(self):
+        cpu = self.hw_profile.get("cpu", {})
+        ram = self.hw_profile.get("ram", {})
+        gpu = self.hw_profile.get("gpu", {})
+        tier = self.hw_profile.get("tier", {})
+        return (
+            "=====================================================\n"
+            "GIRI OS 0.1 GENESIS — HARDWARE SPECIFICATION REPORT\n"
+            "Founder: Abhinav Giri | Debian 12 Bookworm AMD64\n"
+            "=====================================================\n"
+            f"CPU: {cpu.get('model', 'Unknown')} ({cpu.get('cores_logical', 1)} logical cores, {cpu.get('architecture', 'x86_64')})\n"
+            f"RAM: {ram.get('total_gb', 'N/A')} GB Total\n"
+            f"GPU: {gpu.get('model', 'Integrated')} (Driver: {gpu.get('driver', 'crocus/i915')})\n"
+            f"Tier: {tier.get('profile_name', 'Giri Classic')}\n"
+            "=====================================================\n"
+        )
 
     # =========================================================================
     # 5. Giri Bridge (Windows Compatibility)
@@ -931,6 +1028,51 @@ class GiriControlCenter(tk.Toplevel):
         tk.Label(card, text="Firewall Status (UFW): Active (Default Incoming: Deny, Outgoing: Allow)", font=("Segoe UI", 10, "bold"), fg="#ffffff", bg="#0f172a").pack(anchor="w")
         tk.Label(card, text="Cryptographic Package Verification: Debian Archive GPG Keyrings Enforced", font=("Segoe UI", 10, "bold"), fg="#ffffff", bg="#0f172a").pack(anchor="w", pady=2)
         tk.Label(card, text="PAM Privilege Sanitization: Enabled", font=("Segoe UI", 10, "bold"), fg="#ffffff", bg="#0f172a").pack(anchor="w", pady=2)
+
+        # Notification Privacy & Focus Mode
+        card_dnd = tk.Frame(self.content, bg="#0f172a", padx=18, pady=16)
+        card_dnd.pack(fill="x", pady=10)
+
+        tk.Label(card_dnd, text="🔕 Focus Mode & Do Not Disturb", font=("Segoe UI", 11, "bold"), fg="#00d2ff", bg="#0f172a").pack(anchor="w")
+        tk.Label(card_dnd, text="Mutes desktop notification banners during presentations, deep work, or gaming.", font=("Segoe UI", 9), fg="#8ea4c8", bg="#0f172a").pack(anchor="w", pady=(2, 8))
+
+        self.dnd_status_lbl = tk.Label(card_dnd, text="Status: Notifications Active", font=("Segoe UI", 9, "bold"), fg="#10b981", bg="#0f172a")
+        self.dnd_status_lbl.pack(anchor="w", pady=(0, 8))
+
+        btn_dnd = tk.Button(
+            card_dnd,
+            text="Toggle Do Not Disturb",
+            font=("Segoe UI", 9, "bold"),
+            bg="#16223d",
+            fg="#c2d5ee",
+            relief="flat",
+            padx=12,
+            pady=5,
+            command=self.toggle_dnd_mode
+        )
+        btn_dnd.pack(anchor="w")
+
+    def toggle_dnd_mode(self):
+        self.dnd_active = not getattr(self, "dnd_active", False)
+        if shutil.which("dunstctl"):
+            try:
+                subprocess.run(["dunstctl", "set-paused", "true" if self.dnd_active else "false"], check=False)
+            except Exception:
+                pass
+        state_str = "Active (Paused)" if self.dnd_active else "Inactive (Alerts Active)"
+        color_str = "#ef4444" if self.dnd_active else "#10b981"
+        if hasattr(self, "dnd_status_lbl"):
+            self.dnd_status_lbl.config(text=f"Status: {state_str}", fg=color_str)
+        if not self.non_interactive:
+            messagebox.showinfo("Focus Mode", f"Do Not Disturb is now {'enabled' if self.dnd_active else 'disabled'}.")
+
+    def destroy(self):
+        super().destroy()
+        if getattr(self, "_is_standalone", False) and hasattr(self, "root") and self.root:
+            try:
+                self.root.destroy()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

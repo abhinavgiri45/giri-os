@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 220" width="100%" height="100%">
+  <rect width="820" height="220" rx="16" fill="#070913" />
+  <!-- Brand Symbol -->
+  <g transform="translate(35, 10)">
+    <g id="symbol-concept-3" filter="url(#c3_glow)">
+      <defs>
+        <linearGradient id="c3_f1_dk" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00F0FF" />
+          <stop offset="100%" stop-color="#0072FF" />
+        </linearGradient>
+        <linearGradient id="c3_f2_dk" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#3B82F6" />
+          <stop offset="100%" stop-color="#6366F1" />
+        </linearGradient>
+        <linearGradient id="c3_f3_dk" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#C084FC" />
+          <stop offset="100%" stop-color="#9333EA" />
+        </linearGradient>
+        <filter id="c3_glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#00F0FF" flood-opacity="0.35"/>
+        </filter>
+        </defs>
+      <!-- Facet 1: Top Canopy (Cyan Horizon) -->
+      <path d="M 100,24 L 170,64 L 138,82 L 100,60 L 62,82 L 30,64 Z" fill="url(#c3_f1_dk)" />
+      <!-- Facet 2: Left Pillar (Cobalt Anchor) -->
+      <path d="M 30,64 L 62,82 L 62,142 L 30,160 Z" fill="url(#c3_f2_dk)" />
+      <!-- Facet 3: Foundation & Core Crossbar (Electric Violet Gateway) -->
+      <path d="
+    M 30,160 
+    L 62,142 
+    L 100,164 
+    L 138,142 
+    L 138,106 
+    L 94,106 
+    L 94,86 
+    L 168,86 
+    L 168,160 
+    L 100,200 
+    Z
+    " fill="url(#c3_f3_dk)" />
+    </g>
+  </g>
+  <!-- Wordmark Section -->
+  <g transform="translate(265, 30)">
+    <!-- Main Title -->
+    <text x="0" y="78" font-family="'Inter', 'Space Grotesk', -apple-system, sans-serif" font-weight="800" font-size="76" letter-spacing="6">
+      <tspan fill="#FFFFFF">GIRI</tspan>
+      <tspan dx="14" fill="#00F0FF">OS</tspan>
+    </text>
+    <!-- Divider Bar -->
+    <rect x="2" y="98" width="480" height="2.5" rx="1.2" fill="#00F0FF" />
+    <!-- Tagline -->
+    <text x="3" y="128" font-family="'Inter', 'Space Grotesk', -apple-system, sans-serif" font-weight="600" font-size="14" letter-spacing="6" fill="#94A3B8">ONE SYSTEM. INFINITE POSSIBILITIES.</text>
+  </g>
+</svg>
