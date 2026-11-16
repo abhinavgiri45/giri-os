@@ -1,0 +1,47 @@
+#!/bin/sh
+# ====================================================================
+# Giri Space — Official X11 Desktop Session Entrypoint
+# Author: Abhinav Giri / Giri OS Core Engineering Team
+# License: GPL-3.0-or-later
+#
+# Orchestrates window manager (Openbox), compositor (Picom),
+# notification daemon (Dunst), and Giri Space desktop shell.
+# ====================================================================
+
+PROFILE="classic"
+if [ "$1" = "--profile" ] && [ -n "$2" ]; then
+    PROFILE="$2"
+fi
+
+# 1. Start X11 Window Manager (Openbox) in background to manage window frames
+if command -v openbox >/dev/null 2>&1; then
+    openbox --sm-disable &
+fi
+
+# 2. Start Compositor if Modern Profile (disabled in Classic for Intel HD 2000)
+if [ "$PROFILE" = "modern" ]; then
+    if command -v picom >/dev/null 2>&1; then
+        picom -b --backend glx --vsync &
+    fi
+fi
+
+# 3. Start Notification Daemon
+if command -v dunst >/dev/null 2>&1; then
+    dunst &
+fi
+
+# 4. Set Default Background via feh if available
+if command -v feh >/dev/null 2>&1; then
+    if [ -f /usr/share/backgrounds/giri-origin.png ]; then
+        feh --bg-fill /usr/share/backgrounds/giri-origin.png &
+    fi
+fi
+
+# 5. Launch Giri Space Desktop Shell as main session process
+if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
+    exec python3 /usr/share/giri-space/shell/giri_space.py --profile "$PROFILE"
+elif [ -f "$(dirname "$0")/../shell/giri_space.py" ]; then
+    exec python3 "$(dirname "$0")/../shell/giri_space.py" --profile "$PROFILE"
+else
+    exec xterm
+fi

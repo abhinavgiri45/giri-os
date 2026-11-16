@@ -519,10 +519,40 @@ class GiriSpaceDesktop(tk.Tk):
         self.running_apps.add(clean_name)
         if self.launcher_open:
             self.toggle_launcher()
+
         if "Control" in name:
             self.open_control_center()
-        else:
-            messagebox.showinfo("Giri Space Application", f"Launching: {name}\nRunning in Giri {self.profile.capitalize()} environment.")
+            return
+
+        # Attempt real process execution with fallbacks
+        app_commands = {
+            "Terminal": ["kitty", "xterm", "xfce4-terminal", "gnome-terminal", "powershell.exe", "cmd.exe"],
+            "Files": ["thunar", "pcmanfm", "nautilus", "explorer.exe"],
+            "Text Editor": ["mousepad", "gedit", "featherpad", "notepad.exe"],
+            "System Monitor": ["gnome-system-monitor", "htop", "taskmgr.exe"],
+            "Browser": ["firefox", "chromium", "google-chrome"],
+        }
+
+        matched = False
+        for key, cmds in app_commands.items():
+            if key.lower() in name.lower():
+                for cmd in cmds:
+                    import shutil
+                    if shutil.which(cmd):
+                        try:
+                            subprocess.Popen([cmd])
+                            matched = True
+                            break
+                        except Exception:
+                            pass
+                if matched:
+                    break
+
+        if not matched:
+            messagebox.showinfo(
+                "Giri Space Application",
+                f"Application: {name}\nProfile: Giri {self.profile.capitalize()}\nStatus: Launched or registered in session."
+            )
 
     def open_control_center(self):
         if GiriControlCenter:

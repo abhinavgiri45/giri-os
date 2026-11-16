@@ -42,10 +42,18 @@ autologin-user=giri
 autologin-user-timeout=0
 EOF
 
-# 6. Ensure Giri Space Desktop Executable is Linked
+# 6. Ensure Giri Space Desktop & Session Executables are Linked
 if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
     chmod +x /usr/share/giri-space/shell/giri_space.py
     ln -sf /usr/share/giri-space/shell/giri_space.py /usr/bin/giri-space
 fi
+
+if [ -f /usr/share/giri-space/session/giri-session ]; then
+    chmod +x /usr/share/giri-space/session/giri-session
+    ln -sf /usr/share/giri-space/session/giri-session /usr/bin/giri-session
+fi
+
+mkdir -p /usr/share/xsessions/
+cp -f /usr/share/giri-space/session/*.desktop /usr/share/xsessions/ || true
 
 echo ">>> [Giri OS] Chroot configuration completed successfully."

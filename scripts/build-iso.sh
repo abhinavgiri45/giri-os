@@ -76,6 +76,11 @@ cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_CHROOT}/usr/share/grub/themes/g
 # Copy Giri Space Desktop
 cp -rf "${PROJECT_ROOT}/desktop/giri-space/"* "${INCLUDES_CHROOT}/usr/share/giri-space/"
 
+# Copy Calamares Installer Settings & Modules
+mkdir -p "${INCLUDES_CHROOT}/etc/calamares/modules"
+cp -f "${PROJECT_ROOT}/installer/calamares/settings.conf" "${INCLUDES_CHROOT}/etc/calamares/" || true
+cp -rf "${PROJECT_ROOT}/installer/calamares/modules/"* "${INCLUDES_CHROOT}/etc/calamares/modules/" || true
+
 # Copy System release files
 cp -f "${PROJECT_ROOT}/system/etc/os-release" "${INCLUDES_CHROOT}/etc/os-release"
 cp -f "${PROJECT_ROOT}/system/etc/issue" "${INCLUDES_CHROOT}/etc/issue"

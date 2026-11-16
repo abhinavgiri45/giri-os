@@ -39,6 +39,7 @@ bridge_mod = load_module("analyzer", "compatibility/giri-bridge/analyzer.py")
 gaming_mod = load_module("governor", "gaming/giri-gaming/governor.py")
 updater_mod = load_module("client", "updater/giri-update/client.py")
 control_mod = load_module("control_center", "desktop/giri-space/control-center/control_center.py")
+runner_mod = load_module("runner", "compatibility/giri-bridge/runner.py")
 
 HardwareDetector = hw_mod.HardwareDetector
 GiriFirstBootWizard = wizard_mod.GiriFirstBootWizard
@@ -47,6 +48,7 @@ PEAnalyzer = bridge_mod.PEAnalyzer
 GiriGameGovernor = gaming_mod.GiriGameGovernor
 GiriUpdateClient = updater_mod.GiriUpdateClient
 GiriControlCenter = control_mod.GiriControlCenter
+WineRunner = runner_mod.WineRunner
 
 
 class TestGiriOSCore(unittest.TestCase):
@@ -127,6 +129,22 @@ class TestGiriOSCore(unittest.TestCase):
 
             thumb_path = os.path.join(wp_dir, "thumbnails", wp["filename"])
             self.assertTrue(os.path.isfile(thumb_path), f"Missing thumbnail: {thumb_path}")
+
+    def test_08_wine_runner_status(self):
+        runner = WineRunner()
+        status = runner.get_status()
+        self.assertIn("wine_installed", status)
+        self.assertIn("prefix_root", status)
+        self.assertIn("subsystem", status)
+
+    def test_09_calamares_configurations(self):
+        settings_path = os.path.join(ROOT_DIR, "installer", "calamares", "settings.conf")
+        self.assertTrue(os.path.isfile(settings_path))
+
+        required_modules = ["branding.desc", "welcome.conf", "partition.conf", "unpackfs.conf", "bootloader.conf", "users.conf"]
+        for mod in required_modules:
+            mod_file = os.path.join(ROOT_DIR, "installer", "calamares", "modules", mod)
+            self.assertTrue(os.path.isfile(mod_file), f"Missing Calamares module: {mod}")
 
 
 if __name__ == "__main__":

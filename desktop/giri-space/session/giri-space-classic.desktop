@@ -1,9 +1,9 @@
 [Desktop Entry]
 Name=Giri Space (Classic)
 Comment=Lightweight Giri OS Desktop Environment optimized for Intel HD 2000 and legacy hardware
-Exec=/usr/bin/giri-space --profile classic
-TryExec=/usr/bin/giri-space
-Icon=giri-logo-icon
+Exec=/usr/bin/giri-session --profile classic
+TryExec=/usr/bin/giri-session
+Icon=giri-os-icon
 Type=Application
 DesktopNames=GiriSpace:Classic
 Keywords=giri;desktop;space;classic;legacy;
