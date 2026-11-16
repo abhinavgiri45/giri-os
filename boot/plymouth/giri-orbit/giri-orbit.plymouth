@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Giri Orbit
+Description=Official Plymouth boot splash for Giri OS featuring smooth orbital animations
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/giri-orbit
+ScriptFile=/usr/share/plymouth/themes/giri-orbit/giri-orbit.script

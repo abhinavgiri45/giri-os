@@ -1,0 +1,91 @@
+# ====================================================================
+# GIRI OS — PLYMOUTH BOOT SPLASH ANIMATION SCRIPT ("giri-orbit")
+# ====================================================================
+
+# Set Background Color (Deep Navy #070913)
+Window.SetBackgroundTopColor(0.027, 0.035, 0.075);
+Window.SetBackgroundBottomColor(0.015, 0.020, 0.047);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+# Load Logo Sprite
+logo_image = Image("logo.png");
+logo_sprite = Sprite(logo_image);
+logo_x = (screen_width - logo_image.GetWidth()) / 2;
+logo_y = (screen_height - logo_image.GetHeight()) / 2 - 30;
+logo_sprite.SetPosition(logo_x, logo_y, 10);
+logo_sprite.SetOpacity(1.0);
+
+# Load Orbital Ring Sprite
+ring_image = Image("ring.png");
+ring_sprite = Sprite();
+ring_x = screen_width / 2;
+ring_y = screen_height / 2 - 30;
+ring_sprite.SetPosition(ring_x - ring_image.GetWidth() / 2, ring_y - ring_image.GetHeight() / 2, 8);
+ring_sprite.SetOpacity(0.85);
+
+# Load Progress Bar Sprites
+bar_bg_image = Image("progress_bg.png");
+bar_bg_sprite = Sprite(bar_bg_image);
+bar_bg_x = (screen_width - bar_bg_image.GetWidth()) / 2;
+bar_bg_y = screen_height / 2 + 110;
+bar_bg_sprite.SetPosition(bar_bg_x, bar_bg_y, 10);
+bar_bg_sprite.SetOpacity(0.9);
+
+bar_fg_image = Image("progress_fg.png");
+bar_fg_sprite = Sprite();
+bar_fg_sprite.SetPosition(bar_bg_x + 2, bar_bg_y + 2, 12);
+
+# Tagline Sprite
+tagline_image = Image.Text("ONE SYSTEM. INFINITE POSSIBILITIES.", 0.55, 0.65, 0.82, 1.0, "DejaVu Sans Bold 13");
+tagline_sprite = Sprite(tagline_image);
+tagline_sprite.SetPosition((screen_width - tagline_image.GetWidth()) / 2, bar_bg_y + 35, 10);
+
+# Global Rotation Angle
+angle = 0.0;
+current_progress = 0.0;
+
+# Animation Loop Callback (Runs at ~60/30 FPS)
+fun refresh_callback () {
+    # Rotate the orbital ring continuously
+    angle += 0.035;
+    if (angle > 6.28318) {
+        angle = 0.0;
+    }
+    
+    rotated_ring = ring_image.Rotate(angle);
+    ring_sprite.SetImage(rotated_ring);
+    ring_sprite.SetPosition(ring_x - rotated_ring.GetWidth() / 2, ring_y - rotated_ring.GetHeight() / 2, 8);
+}
+
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# Progress Callback (Updated by systemd boot generator)
+fun progress_callback (duration, progress) {
+    if (progress > current_progress) {
+        current_progress = progress;
+    }
+    
+    bar_width = (bar_bg_image.GetWidth() - 4) * current_progress;
+    if (bar_width < 1) {
+        bar_width = 1;
+    }
+    
+    # Scale progress bar fill
+    bar_fg_scaled = bar_fg_image.Scale(bar_width, bar_fg_image.GetHeight());
+    bar_fg_sprite.SetImage(bar_fg_scaled);
+}
+
+Plymouth.SetBootProgressFunction(progress_callback);
+
+# Boot Quit Handler (Smooth Fadeout)
+fun quit_callback () {
+    logo_sprite.SetOpacity(0.0);
+    ring_sprite.SetOpacity(0.0);
+    bar_bg_sprite.SetOpacity(0.0);
+    bar_fg_sprite.SetOpacity(0.0);
+    tagline_sprite.SetOpacity(0.0);
+}
+
+Plymouth.SetQuitFunction(quit_callback);

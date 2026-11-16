@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3840 2160" width="100%" height="100%">
+  <defs>
+    <!-- Deep Space Gradients -->
+    <radialGradient id="spaceGlow" cx="50%" cy="48%" r="65%">
+      <stop offset="0%" stop-color="#1A103C" stop-opacity="0.8" />
+      <stop offset="35%" stop-color="#0E1938" stop-opacity="0.9" />
+      <stop offset="70%" stop-color="#080C1A" />
+      <stop offset="100%" stop-color="#04060C" />
+    </radialGradient>
+
+    <radialGradient id="coreLight" cx="50%" cy="48%" r="30%">
+      <stop offset="0%" stop-color="#00D2FF" stop-opacity="0.35" />
+      <stop offset="50%" stop-color="#7928CA" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#080C1A" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="orbitStroke1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.7" />
+      <stop offset="50%" stop-color="#9D4EDD" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#0066FF" stop-opacity="0.1" />
+    </linearGradient>
+
+    <linearGradient id="orbitStroke2" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF007A" stop-opacity="0.4" />
+      <stop offset="50%" stop-color="#7928CA" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#00D2FF" stop-opacity="0.2" />
+    </linearGradient>
+
+    <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Deep Cosmic Background -->
+  <rect width="3840" height="2160" fill="#04060C" />
+  <rect width="3840" height="2160" fill="url(#spaceGlow)" />
+  <rect width="3840" height="2160" fill="url(#coreLight)" />
+
+  <!-- Background Stars & Particles -->
+  <g opacity="0.6">
+    <circle cx="480" cy="320" r="1.5" fill="#FFFFFF" />
+    <circle cx="890" cy="180" r="2.2" fill="#00D2FF" opacity="0.8" />
+    <circle cx="1200" cy="450" r="1.2" fill="#FFFFFF" />
+    <circle cx="1600" cy="220" r="2.5" fill="#9D4EDD" opacity="0.7" />
+    <circle cx="2100" cy="380" r="1.8" fill="#FFFFFF" />
+    <circle cx="2750" cy="190" r="2.0" fill="#00D2FF" />
+    <circle cx="3300" cy="420" r="1.5" fill="#FFFFFF" />
+    <circle cx="3500" cy="260" r="2.8" fill="#C77DFF" opacity="0.9" />
+    <circle cx="350" cy="1400" r="2.0" fill="#FFFFFF" />
+    <circle cx="720" cy="1850" r="1.8" fill="#00D2FF" />
+    <circle cx="1100" cy="1600" r="2.4" fill="#FFFFFF" />
+    <circle cx="2800" cy="1750" r="1.6" fill="#FFFFFF" />
+    <circle cx="3250" cy="1900" r="2.2" fill="#9D4EDD" />
+    <circle cx="3600" cy="1550" r="1.5" fill="#00D2FF" />
+  </g>
+
+  <!-- Giant Orbital Geometric Arcs (Center X=1920, Y=1040) -->
+  <g transform="translate(1920, 1040)">
+    <!-- Outermost Distant Orbit -->
+    <ellipse cx="0" cy="0" rx="1450" ry="580" fill="none" stroke="url(#orbitStroke1)" stroke-width="1.5" stroke-dasharray="8 16" transform="rotate(-18)" opacity="0.35" />
+
+    <!-- Secondary Main Orbit -->
+    <ellipse cx="0" cy="0" rx="1080" ry="420" fill="none" stroke="url(#orbitStroke2)" stroke-width="2.5" stroke-dasharray="650 30 180 20" transform="rotate(-25)" opacity="0.6" />
+    <!-- Orbit Satellite Node -->
+    <g transform="rotate(-25)">
+      <circle cx="1080" cy="0" r="8" fill="#00F0FF" filter="url(#starGlow)" />
+      <circle cx="1080" cy="0" r="3.5" fill="#FFFFFF" />
+      <circle cx="-1080" cy="0" r="6" fill="#9D4EDD" filter="url(#starGlow)" />
+    </g>
+
+    <!-- Inner High Energy Orbit -->
+    <ellipse cx="0" cy="0" rx="680" ry="260" fill="none" stroke="url(#orbitStroke1)" stroke-width="3" transform="rotate(-32)" opacity="0.75" />
+    <g transform="rotate(-32)">
+      <circle cx="680" cy="0" r="6" fill="#00F0FF" filter="url(#starGlow)" />
+      <circle cx="680" cy="0" r="2.5" fill="#FFFFFF" />
+    </g>
+
+    <!-- Center Giri Core Geometry (Minimalist Floating Symbol) -->
+    <g transform="scale(1.8) translate(-140, -140)" opacity="0.88">
+      <!-- Glow behind symbol -->
+      <circle cx="140" cy="140" r="75" fill="#00D2FF" opacity="0.12" filter="url(#starGlow)" />
+      
+      <!-- G Shape -->
+      <path d="M 205,108 
+               C 188,74 152,56 116,61 
+               C 74,67 46,101 46,140 
+               C 46,182 77,213 121,213 
+               C 165,213 196,183 196,144 
+               L 196,133 
+               L 122,133 
+               L 122,154 
+               L 171,154 
+               C 168,170 148,188 121,188 
+               C 90,188 69,165 69,137 
+               C 69,109 89,86 118,82 
+               C 140,79 161,89 172,106 
+               Z" 
+            fill="#00D2FF" />
+      <!-- Crossing Accent -->
+      <path d="M 122,133 L 171,133 L 171,154 L 122,154 Z" fill="#9D4EDD" />
+    </g>
+  </g>
+
+  <!-- Bottom Brand Signature -->
+  <g transform="translate(1920, 2060)" text-anchor="middle">
+    <text font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="8" fill="#586E8F" opacity="0.7">GIRI OS  •  ONE SYSTEM. INFINITE POSSIBILITIES.</text>
+  </g>
+</svg>

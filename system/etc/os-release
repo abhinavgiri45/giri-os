@@ -1,0 +1,12 @@
+NAME="Giri OS"
+VERSION="0.1 (Genesis)"
+ID=giri
+ID_LIKE=debian
+PRETTY_NAME="Giri OS 0.1 Genesis (Debian Bookworm Based)"
+VERSION_ID="0.1"
+VERSION_CODENAME=genesis
+HOME_URL="https://girios.org"
+SUPPORT_URL="https://github.com/girios/giri-os/issues"
+BUG_REPORT_URL="https://github.com/girios/giri-os/issues"
+PRIVACY_POLICY_URL="https://girios.org/privacy"
+LOGO=giri-logo-icon

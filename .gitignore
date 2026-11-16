@@ -1,0 +1,21 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Build artifacts & ISOs
+build/live-build/.build/
+build/live-build/chroot/
+build/live-build/binary/
+releases/*.iso
+*.iso
+*.squashfs
+
+# Environment & temporary files
+.env
+venv/
+ENV/
+.DS_Store
+Thumbs.db

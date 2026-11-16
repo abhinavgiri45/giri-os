@@ -1,0 +1,27 @@
+#!/bin/sh
+set -e
+
+# ====================================================================
+# GIRI OS 0.1 "Genesis" — Live-Build Auto Configuration Script
+# Target: Debian 12 (Bookworm) amd64 Hybrid Live/Installer ISO
+# ====================================================================
+
+lb config noauto \
+    --distribution bookworm \
+    --architectures amd64 \
+    --archive-areas "main contrib non-free non-free-firmware" \
+    --binary-images iso-hybrid \
+    --bootloader grub-efi \
+    --grub-theme "/usr/share/grub/themes/giri" \
+    --linux-flavours amd64 \
+    --memtest memtest86+ \
+    --iso-application "Giri OS 0.1 Genesis" \
+    --iso-preparer "Abhinav Giri <lead@girios.org>" \
+    --iso-publisher "Giri OS Open Source Project; https://girios.org" \
+    --iso-volume "GIRI_OS_01_GENESIS" \
+    --apt-indices false \
+    --apt-recommends true \
+    --security true \
+    --updates true \
+    --win32-loader false \
+    "${@}"

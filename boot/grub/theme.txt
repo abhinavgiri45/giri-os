@@ -1,0 +1,89 @@
+# ====================================================================
+# GIRI OS — OFFICIAL GRUB 2 BOOTLOADER THEME
+# Version: 0.1 "Genesis"
+# Color Palette: Midnight Navy (#080c1a), Electric Blue (#00d2ff), Violet (#7928ca)
+# ====================================================================
+
+# Global Configuration
+title-text: ""
+desktop-image: "background.png"
+desktop-color: "#080c1a"
+terminal-font: "Unifont Regular 16"
+terminal-box: "terminal_box.png"
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+terminal-border: "0"
+
+# Header Logo & Title
++ image {
+    top = 10%
+    left = 50%-220
+    width = 440
+    height = 90
+    file = "logo.png"
+}
+
++ label {
+    top = 22%
+    left = 50%-250
+    width = 500
+    align = "center"
+    text = "ONE SYSTEM. INFINITE POSSIBILITIES."
+    color = "#8ea4c8"
+    font = "DejaVu Sans Bold 14"
+}
+
+# Boot Selection Menu Box
++ boot_menu {
+    left = 50%-320
+    top = 32%
+    width = 640
+    height = 42%
+    item_font = "DejaVu Sans Bold 16"
+    item_color = "#99b0d6"
+    selected_item_font = "DejaVu Sans Bold 16"
+    selected_item_color = "#ffffff"
+    item_height = 44
+    item_padding = 10
+    item_spacing = 8
+    icon_width = 32
+    icon_height = 32
+    selected_item_pixmap_style = "select_box_*.png"
+    menu_pixmap_style = "menu_box_*.png"
+}
+
+# Countdown / Boot Timeout Label & Progress Bar
++ label {
+    top = 80%
+    left = 50%-200
+    width = 400
+    align = "center"
+    id = "__timeout__"
+    text = "Booting automatically in %d seconds..."
+    color = "#00d2ff"
+    font = "DejaVu Sans Regular 13"
+}
+
++ progress_bar {
+    id = "__timeout__"
+    left = 50%-180
+    top = 84%
+    width = 360
+    height = 8
+    show_text = false
+    bar_style = "progress_bar_*.png"
+    highlight_style = "progress_highlight_*.png"
+}
+
+# Navigation Footer Help
++ label {
+    top = 92%
+    left = 50%-300
+    width = 600
+    align = "center"
+    text = "Use [↑] / [↓] to navigate, [Enter] to boot, [E] to edit entry"
+    color = "#556e94"
+    font = "DejaVu Sans Regular 12"
+}

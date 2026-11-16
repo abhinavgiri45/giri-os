@@ -1,0 +1,51 @@
+#!/bin/sh
+set -e
+
+# ====================================================================
+# GIRI OS 0.1 "Genesis" — Live Chroot Configuration Hook
+# Executed inside the live environment before squashfs creation
+# ====================================================================
+
+echo ">>> [Giri OS] Configuring System Branding & Live User Environment..."
+
+# 1. Enable 32-bit Multiarch for Wine Application Compatibility
+dpkg --add-architecture i386 || true
+
+# 2. Hostname Setup
+echo "giri-os" > /etc/hostname
+
+# 3. Configure Plymouth Boot Splash Theme
+if [ -d /usr/share/plymouth/themes/giri-orbit ]; then
+    echo ">>> Setting Plymouth default theme to giri-orbit..."
+    plymouth-set-default-theme -R giri-orbit || true
+fi
+
+# 4. Configure Default Live User Privileges (giri)
+if id "giri" >/dev/null 2>&1; then
+    echo "User giri already exists."
+else
+    useradd -m -s /bin/bash -g users -G sudo,audio,video,plugdev,netdev,games,cdrom giri || true
+    echo "giri:giri" | chpasswd
+fi
+
+# Grant passwordless sudo for live session
+echo "giri ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/giri-live
+chmod 0440 /etc/sudoers.d/giri-live
+
+# 5. Configure LightDM Greeter & Default Session
+mkdir -p /etc/lightdm/lightdm.conf.d/
+cat << 'EOF' > /etc/lightdm/lightdm.conf.d/01-giri-defaults.conf
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+user-session=giri-space-classic
+autologin-user=giri
+autologin-user-timeout=0
+EOF
+
+# 6. Ensure Giri Space Desktop Executable is Linked
+if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
+    chmod +x /usr/share/giri-space/shell/giri_space.py
+    ln -sf /usr/share/giri-space/shell/giri_space.py /usr/bin/giri-space
+fi
+
+echo ">>> [Giri OS] Chroot configuration completed successfully."

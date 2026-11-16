@@ -1,0 +1,61 @@
+# ====================================================================
+# GIRI OS DESKTOP SUBSYSTEM (Giri Space Environment)
+# ====================================================================
+
+# X11 Display Server & Mesa Graphics
+xorg
+xserver-xorg
+xserver-xorg-video-intel
+xserver-xorg-video-amdgpu
+xserver-xorg-video-nouveau
+xserver-xorg-video-all
+mesa-utils
+mesa-va-drivers
+mesa-vulkan-drivers
+i965-va-driver
+intel-media-va-driver
+
+# Window Manager & Compositor
+openbox
+picom
+feh
+tint2
+rofi
+dunst
+libnotify-bin
+
+# Display Manager / Greeter
+lightdm
+lightdm-gtk-greeter
+lightdm-gtk-greeter-settings
+
+# Audio Stack (Low Latency PipeWire)
+pipewire
+pipewire-audio-client-libraries
+wireplumber
+pavucontrol
+pulseaudio-utils
+
+# Python GUI & Runtime Tools
+python3
+python3-tk
+python3-pip
+python3-psutil
+python3-pil
+
+# Standard Applications
+kitty
+thunar
+thunar-archive-plugin
+mousepad
+viewnior
+calamares
+calamares-settings-debian
+
+# Fonts & Visual Assets
+fonts-dejavu
+fonts-inter
+fonts-noto
+fonts-font-awesome
+arc-theme
+papirus-icon-theme

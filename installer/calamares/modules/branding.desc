@@ -1,0 +1,31 @@
+# ====================================================================
+# GIRI OS — CALAMARES BRANDING SPECIFICATION
+# ====================================================================
+---
+componentName: giri
+
+strings:
+    productName:         "Giri OS"
+    version:             "0.1 (Genesis)"
+    shortVersion:        "0.1"
+    versionedName:       "Giri OS 0.1 Genesis"
+    shortVersionedName:  "Giri OS 0.1"
+    bootloaderEntryName: "Giri OS"
+    productUrl:          "https://girios.org"
+    supportUrl:          "https://github.com/girios/giri-os/issues"
+    knownIssuesUrl:      "https://github.com/girios/giri-os/issues"
+    releaseNotesUrl:     "https://github.com/girios/giri-os/releases"
+    donateUrl:           "https://girios.org"
+
+images:
+    productLogo:         "/usr/share/icons/hicolor/scalable/apps/giri-logo-icon.svg"
+    productIcon:         "/usr/share/icons/hicolor/scalable/apps/giri-logo-icon.svg"
+    productWelcome:      "/usr/share/backgrounds/giri-orbit-dark.svg"
+
+slideshow:               []
+
+style:
+   SidebarBackground:    "#080c1a"
+   SidebarText:          "#ffffff"
+   SidebarTextSelect:    "#00d2ff"
+   SidebarTextHighlight: "#7928ca"

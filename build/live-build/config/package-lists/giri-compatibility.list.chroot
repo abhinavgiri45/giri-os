@@ -1,0 +1,21 @@
+# ====================================================================
+# GIRI BRIDGE & GAMING RUNTIME PACKAGES
+# ====================================================================
+
+# Wine Multiarchitecture Core
+wine
+wine64
+winetricks
+
+# DOS & Retro Emulation
+dosbox
+
+# Low-Latency Gaming Support
+gamemode
+libgamemode0
+
+# Vulkan & Software Fallback Tools
+vulkan-tools
+libvulkan1
+libgl1-mesa-dri
+libgl1-mesa-glx

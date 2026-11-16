@@ -1,0 +1,55 @@
+# ====================================================================
+# GIRI OS CORE SYSTEM PACKAGE LIST
+# ====================================================================
+
+# Linux Kernel & Core Firmware
+linux-image-amd64
+linux-headers-amd64
+firmware-linux
+firmware-linux-free
+firmware-linux-nonfree
+intel-microcode
+amd64-microcode
+
+# Base System Daemons & Utilities
+live-boot
+live-config
+live-config-systemd
+systemd
+systemd-sysv
+udev
+dbus
+sudo
+bash
+bash-completion
+coreutils
+curl
+wget
+git
+pciutils
+usbutils
+lshw
+inxi
+htop
+neofetch
+dosfstools
+e2fsprogs
+btrfs-progs
+ntfs-3g
+parted
+
+# Network & Connectivity
+network-manager
+network-manager-gnome
+wireless-tools
+wpasupplicant
+rfkill
+bluetooth
+bluez
+
+# Boot & Graphical Splash
+plymouth
+plymouth-themes
+grub-efi-amd64-bin
+grub-pc-bin
+efibootmgr

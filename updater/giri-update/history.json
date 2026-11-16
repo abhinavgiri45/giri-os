@@ -1,0 +1,13 @@
+{
+  "current_version": "0.1.0-genesis",
+  "channel": "stable",
+  "history": [
+    {
+      "timestamp": "2026-11-16 14:19:20",
+      "channel": "stable",
+      "version": "0.1.0-genesis",
+      "status": "SUCCESS",
+      "notes": "Initial milestone installation."
+    }
+  ]
+}
