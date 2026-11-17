@@ -28,16 +28,24 @@ if [ -d /usr/share/plymouth/themes/giri-genesis ]; then
     plymouth-set-default-theme -R giri-genesis || true
 fi
 
-# 4. Configure Default Live User Privileges (giri)
+# 4. Configure Default Live User Privileges (giri & autologin)
+groupadd -f -r autologin
 if id "giri" >/dev/null 2>&1; then
     echo "User giri already exists."
+    usermod -aG autologin,sudo,audio,video,plugdev,netdev,games,cdrom giri || true
 else
-    useradd -m -s /bin/bash -g users -G sudo,audio,video,plugdev,netdev,games,cdrom giri || true
+    useradd -m -s /bin/bash -g users -G autologin,sudo,audio,video,plugdev,netdev,games,cdrom giri || true
     echo "giri:giri" | chpasswd
+fi
+
+# Ensure autologin group exists and live fallback user is also added if present
+if id "user" >/dev/null 2>&1; then
+    usermod -aG autologin,sudo,audio,video,plugdev,netdev,games,cdrom user || true
 fi
 
 # Grant passwordless sudo for live session
 echo "giri ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/giri-live
+echo "user ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/giri-live
 chmod 0440 /etc/sudoers.d/giri-live
 
 # 5. Configure LightDM Greeter & Default Session
