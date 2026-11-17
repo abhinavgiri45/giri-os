@@ -100,7 +100,9 @@ copy_bios_com32_module() {
 
     if [ -n "${found}" ] && [ -f "${found}" ]; then
         mkdir -p "${dest_dir}"
-        cp -fL "${found}" "${dest_dir}/${mod}"
+        # Remove any existing destination file or dangling symlink first to prevent cp write-through errors
+        rm -f "${dest_dir}/${mod}" 2>/dev/null || true
+        cp -fL "${found}" "${dest_dir}/${mod}" 2>/dev/null || cp -f "${found}" "${dest_dir}/${mod}" || true
     fi
 }
 
@@ -109,13 +111,14 @@ if [ -d /usr/share/live/build/bootloaders ]; then
     echo "[+] Resolving and dereferencing bootloader template symlinks in /usr/share/live/build/bootloaders..."
     for bin_path in /usr/lib/ISOLINUX/isolinux.bin /usr/share/isolinux/isolinux.bin /usr/lib/syslinux/isolinux.bin; do
         if [ -f "$bin_path" ]; then
+            rm -f /usr/share/live/build/bootloaders/isolinux/isolinux.bin 2>/dev/null || true
             cp -fL "$bin_path" /usr/share/live/build/bootloaders/isolinux/isolinux.bin 2>/dev/null || true
             break
         fi
     done
     for mod in vesamenu.c32 ldlinux.c32 libcom32.c32 libutil.c32 libmenu.c32 libgpl.c32 hdt.c32 chain.c32 menu.c32; do
-        copy_bios_com32_module "$mod" /usr/share/live/build/bootloaders/syslinux_common/
-        copy_bios_com32_module "$mod" /usr/share/live/build/bootloaders/isolinux/
+        copy_bios_com32_module "$mod" /usr/share/live/build/bootloaders/syslinux_common
+        copy_bios_com32_module "$mod" /usr/share/live/build/bootloaders/isolinux
     done
 fi
 
@@ -290,17 +293,22 @@ cp -f "${PROJECT_ROOT}/boot/isolinux/isolinux.cfg" "${BOOTLOADERS_ISOLINUX}/isol
 # Copy real isolinux.bin and isohdpfx.bin into bootloaders, includes.binary, and includes.chroot
 for bin_path in /usr/lib/ISOLINUX/isolinux.bin /usr/share/isolinux/isolinux.bin /usr/lib/syslinux/isolinux.bin; do
     if [ -f "${bin_path}" ]; then
-        cp -fL "${bin_path}" "${BOOTLOADERS_ISOLINUX}/isolinux.bin"
-        cp -fL "${bin_path}" "${INCLUDES_BINARY}/isolinux/isolinux.bin"
-        cp -fL "${bin_path}" "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isolinux.bin"
+        rm -f "${BOOTLOADERS_ISOLINUX}/isolinux.bin" 2>/dev/null || true
+        cp -fL "${bin_path}" "${BOOTLOADERS_ISOLINUX}/isolinux.bin" 2>/dev/null || true
+        rm -f "${INCLUDES_BINARY}/isolinux/isolinux.bin" 2>/dev/null || true
+        cp -fL "${bin_path}" "${INCLUDES_BINARY}/isolinux/isolinux.bin" 2>/dev/null || true
+        rm -f "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isolinux.bin" 2>/dev/null || true
+        cp -fL "${bin_path}" "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isolinux.bin" 2>/dev/null || true
         break
     fi
 done
 
 for mbr_path in /usr/lib/ISOLINUX/isohdpfx.bin /usr/share/isolinux/isohdpfx.bin /usr/lib/syslinux/isohdpfx.bin; do
     if [ -f "${mbr_path}" ]; then
-        cp -fL "${mbr_path}" "${BOOTLOADERS_ISOLINUX}/isohdpfx.bin"
-        cp -fL "${mbr_path}" "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isohdpfx.bin"
+        rm -f "${BOOTLOADERS_ISOLINUX}/isohdpfx.bin" 2>/dev/null || true
+        cp -fL "${mbr_path}" "${BOOTLOADERS_ISOLINUX}/isohdpfx.bin" 2>/dev/null || true
+        rm -f "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isohdpfx.bin" 2>/dev/null || true
+        cp -fL "${mbr_path}" "${INCLUDES_CHROOT}/usr/lib/ISOLINUX/isohdpfx.bin" 2>/dev/null || true
         break
     fi
 done
