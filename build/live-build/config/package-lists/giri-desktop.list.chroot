@@ -5,10 +5,20 @@
 # X11 Display Server & Mesa Graphics
 xorg
 xserver-xorg
+xserver-xorg-core
 xserver-xorg-video-intel
 xserver-xorg-video-amdgpu
 xserver-xorg-video-nouveau
+xserver-xorg-video-vmware
+xserver-xorg-video-qxl
+xserver-xorg-video-fbdev
+xserver-xorg-video-vesa
 xserver-xorg-video-all
+xserver-xorg-input-libinput
+x11-xserver-utils
+x11-xkb-utils
+x11-utils
+xinit
 mesa-utils
 mesa-va-drivers
 mesa-vulkan-drivers

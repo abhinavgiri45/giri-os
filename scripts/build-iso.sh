@@ -261,7 +261,7 @@ if [[ -z "${ISO_OUTPUT}" || ! -f "${ISO_OUTPUT}" ]]; then
 fi
 
 mkdir -p "${RELEASES_DIR}"
-ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v2-amd64.iso}"
+ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v3-amd64.iso}"
 TARGET_ISO="${RELEASES_DIR}/${ISO_FILENAME}"
 mv -f "${ISO_OUTPUT}" "${TARGET_ISO}"
 

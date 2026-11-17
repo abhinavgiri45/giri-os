@@ -56,7 +56,21 @@ greeter-session=lightdm-gtk-greeter
 user-session=giri-space-classic
 autologin-user=giri
 autologin-user-timeout=0
+display-setup-script=/usr/bin/giri-display-setup
 EOF
+
+# Create display setup script to ensure Plymouth releases display buffer cleanly
+cat << 'EOF' > /usr/bin/giri-display-setup
+#!/bin/sh
+if command -v plymouth >/dev/null 2>&1; then
+    plymouth --quit || true
+fi
+if command -v xrandr >/dev/null 2>&1; then
+    xrandr --auto || true
+fi
+exit 0
+EOF
+chmod +x /usr/bin/giri-display-setup
 
 # 6. Ensure Giri Space Desktop & Session Executables are Linked
 if [ -f /usr/share/giri-space/shell/giri_space.py ]; then

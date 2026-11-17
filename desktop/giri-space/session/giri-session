@@ -6,11 +6,30 @@
 #
 # Orchestrates window manager (Openbox), compositor (Picom),
 # notification daemon (Dunst), and Giri Space desktop shell.
+# Automatically adapts to Intel HD 2000, VirtualBox, and Modern GPUs.
 # ====================================================================
 
 PROFILE="classic"
 if [ "$1" = "--profile" ] && [ -n "$2" ]; then
     PROFILE="$2"
+else
+    # Automatically query universal graphics detector
+    if command -v giri-hw >/dev/null 2>&1; then
+        GFX_PROF=$(giri-hw --graphics-profile 2>/dev/null || true)
+        if [ -n "$GFX_PROF" ]; then
+            PROFILE="$GFX_PROF"
+        fi
+    elif [ -f /usr/lib/giri/hardware/giri-hw/detector.py ]; then
+        GFX_PROF=$(python3 /usr/lib/giri/hardware/giri-hw/detector.py --graphics-profile 2>/dev/null || true)
+        if [ -n "$GFX_PROF" ]; then
+            PROFILE="$GFX_PROF"
+        fi
+    fi
+fi
+
+# 0. Ensure Plymouth boot screen releases the display buffer
+if command -v plymouth >/dev/null 2>&1; then
+    plymouth --quit || true
 fi
 
 # 1. Start X11 Window Manager (Openbox) in background to manage window frames
@@ -18,12 +37,25 @@ if command -v openbox >/dev/null 2>&1; then
     openbox --sm-disable &
 fi
 
-# 2. Start Compositor if Modern Profile (disabled in Classic for Intel HD 2000)
-if [ "$PROFILE" = "modern" ]; then
-    if command -v picom >/dev/null 2>&1; then
-        picom -b --backend glx --vsync &
-    fi
-fi
+# 2. Start Compositor dynamically based on detected graphics capabilities
+# - modern: Full GLX backend with VSync
+# - intel_legacy: Lightweight XRender backend (avoids GLX overhead on Intel HD 2000)
+# - virtualbox / software_rendering / recovery / classic: Disabled to prevent dropped 3D commands
+case "$PROFILE" in
+    modern)
+        if command -v picom >/dev/null 2>&1; then
+            picom -b --backend glx --vsync &
+        fi
+        ;;
+    intel_legacy)
+        if command -v picom >/dev/null 2>&1; then
+            picom -b --backend xrender &
+        fi
+        ;;
+    *)
+        # Compositor disabled for VirtualBox and software rendering
+        ;;
+esac
 
 # 3. Start Notification Daemon
 if command -v dunst >/dev/null 2>&1; then
@@ -50,10 +82,16 @@ if [ ! -d /run/live ] && [ ! -f /var/lib/giri/first-boot-done ] && [ ! -f "$HOME
 fi
 
 # 5. Launch Giri Space Desktop Shell as main session process
+# Map graphics profile to desktop shell tier ('modern' or 'classic')
+SHELL_TIER="classic"
+if [ "$PROFILE" = "modern" ]; then
+    SHELL_TIER="modern"
+fi
+
 if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
-    exec python3 /usr/share/giri-space/shell/giri_space.py --profile "$PROFILE"
+    exec python3 /usr/share/giri-space/shell/giri_space.py --profile "$SHELL_TIER"
 elif [ -f "$(dirname "$0")/../shell/giri_space.py" ]; then
-    exec python3 "$(dirname "$0")/../shell/giri_space.py" --profile "$PROFILE"
+    exec python3 "$(dirname "$0")/../shell/giri_space.py" --profile "$SHELL_TIER"
 else
     exec xterm
 fi
