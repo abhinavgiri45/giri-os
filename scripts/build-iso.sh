@@ -128,6 +128,8 @@ cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_CHROOT}/usr/share/grub/themes/g
 
 # 4d. Copy Giri Space Desktop
 cp -rf "${PROJECT_ROOT}/desktop/giri-space/"* "${INCLUDES_CHROOT}/usr/share/giri-space/"
+mkdir -p "${INCLUDES_CHROOT}/usr/share/xsessions"
+cp -f "${PROJECT_ROOT}/desktop/giri-space/session/"*.desktop "${INCLUDES_CHROOT}/usr/share/xsessions/" || true
 
 # 4e. Copy Core Giri Subsystems
 cp -rf "${PROJECT_ROOT}/hardware/"* "${INCLUDES_CHROOT}/usr/lib/giri/hardware/"
@@ -136,6 +138,50 @@ cp -rf "${PROJECT_ROOT}/gaming/"* "${INCLUDES_CHROOT}/usr/lib/giri/gaming/"
 cp -rf "${PROJECT_ROOT}/updater/"* "${INCLUDES_CHROOT}/usr/lib/giri/updater/"
 cp -rf "${PROJECT_ROOT}/installer/first-boot/"* "${INCLUDES_CHROOT}/usr/lib/giri/first-boot/"
 mkdir -p "${INCLUDES_CHROOT}/usr/bin"
+
+# Ensure execution permissions on all session scripts and core binaries
+chmod +x "${INCLUDES_CHROOT}/usr/share/giri-space/session/giri-session" 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/share/giri-space/shell/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/share/giri-space/control-center/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/share/giri-space/launcher/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/share/giri-space/shortcuts/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/hardware/giri-hw/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/compatibility/giri-bridge/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/gaming/giri-gaming/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/updater/giri-update/"*.py 2>/dev/null || true
+chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/first-boot/"*.py 2>/dev/null || true
+
+# Direct symlinks in /usr/bin
+ln -sf /usr/share/giri-space/session/giri-session "${INCLUDES_CHROOT}/usr/bin/giri-session" 2>/dev/null || true
+ln -sf /usr/share/giri-space/shell/giri_space.py "${INCLUDES_CHROOT}/usr/bin/giri-space" 2>/dev/null || true
+ln -sf /usr/lib/giri/hardware/giri-hw/detector.py "${INCLUDES_CHROOT}/usr/bin/giri-hw" 2>/dev/null || true
+ln -sf /usr/lib/giri/compatibility/giri-bridge/runner.py "${INCLUDES_CHROOT}/usr/bin/giri-bridge" 2>/dev/null || true
+ln -sf /usr/lib/giri/gaming/giri-gaming/governor.py "${INCLUDES_CHROOT}/usr/bin/giri-game" 2>/dev/null || true
+ln -sf /usr/lib/giri/updater/giri-update/client.py "${INCLUDES_CHROOT}/usr/bin/giri-update" 2>/dev/null || true
+
+# Display setup script to cleanly terminate Plymouth and initialize xrandr
+cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-display-setup"
+#!/bin/sh
+if command -v plymouth >/dev/null 2>&1; then
+    plymouth --quit || true
+fi
+if command -v xrandr >/dev/null 2>&1; then
+    xrandr --auto || true
+fi
+exit 0
+EOF
+chmod +x "${INCLUDES_CHROOT}/usr/bin/giri-display-setup"
+
+# Preconfigure LightDM in includes.chroot
+mkdir -p "${INCLUDES_CHROOT}/etc/lightdm/lightdm.conf.d"
+cat << 'EOF' > "${INCLUDES_CHROOT}/etc/lightdm/lightdm.conf.d/01-giri-defaults.conf"
+[Seat:*]
+greeter-session=lightdm-gtk-greeter
+user-session=giri-space-classic
+autologin-user=giri
+autologin-user-timeout=0
+display-setup-script=/usr/bin/giri-display-setup
+EOF
 cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-welcome"
 #!/bin/sh
 exec python3 /usr/lib/giri/first-boot/giri_welcome.py "$@"

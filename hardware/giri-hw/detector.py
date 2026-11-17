@@ -235,40 +235,53 @@ class HardwareDetector:
 
         elif self.os_type == "Windows":
             try:
-                cmd = "wmic path win32_VideoController get caption,DriverVersion /format:list"
+                cmd = "wmic path win32_VideoController get caption,DriverVersion,PNPDeviceID /format:list"
                 out = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL)
+                props = {}
                 for line in out.splitlines():
-                    if line.startswith("Caption="):
-                        val = line.split("=", 1)[1].strip()
-                        gpu_info["model"] = val
-                        if "VirtualBox" in val or "VMware" in val:
-                            gpu_info["vendor"] = "VirtualBox"
-                            gpu_info["is_virtualbox"] = True
-                            gpu_info["driver"] = "VBoxDisp.dll / vmwgfx"
-                            gpu_info["opengl_supported"] = "OpenGL 2.1 (VirtualBox Guest)"
-                            gpu_info["vulkan_supported"] = False
-                            gpu_info["vulkan_details"] = "VirtualBox virtual display controller has no hardware Vulkan."
-                        elif "Intel" in val:
-                            gpu_info["vendor"] = "Intel"
-                            if any(x in val for x in ["HD Graphics 2000", "HD Graphics 3000", "2000", "3000"]):
-                                gpu_info["is_intel_legacy"] = True
-                                gpu_info["is_intel_hd_2000"] = True
-                                gpu_info["driver"] = "igdumdim64.dll / i915"
-                                gpu_info["opengl_supported"] = "OpenGL 3.1 (Mesa crocus equivalent)"
-                                gpu_info["vulkan_supported"] = False
-                                gpu_info["vulkan_details"] = "Intel Sandy Bridge architecture does not feature hardware Vulkan support."
-                            else:
-                                gpu_info["opengl_supported"] = "OpenGL 4.5+ (Intel Iris/UHD)"
-                                gpu_info["vulkan_supported"] = True
-                        elif "NVIDIA" in val:
-                            gpu_info["vendor"] = "NVIDIA"
-                            gpu_info["vulkan_supported"] = True
-                        elif "AMD" in val or "Radeon" in val:
-                            gpu_info["vendor"] = "AMD"
-                            gpu_info["vulkan_supported"] = True
-                    elif line.startswith("DriverVersion="):
-                        if not gpu_info["driver"] or gpu_info["driver"] == "Unknown":
-                            gpu_info["driver"] = line.split("=", 1)[1].strip()
+                    if "=" in line:
+                        k, v = line.split("=", 1)
+                        props[k.strip().lower()] = v.strip()
+
+                val = props.get("caption", "")
+                pnp_id = props.get("pnpdeviceid", "")
+                drv_ver = props.get("driverversion", "")
+                cpu_model = self.profile.get("cpu", {}).get("model", "")
+
+                gpu_info["model"] = val or "Unknown Windows GPU"
+                if drv_ver:
+                    gpu_info["driver"] = drv_ver
+
+                if "VirtualBox" in val or "VMware" in val or "80EE" in pnp_id.upper():
+                    gpu_info["vendor"] = "VirtualBox"
+                    gpu_info["is_virtualbox"] = True
+                    gpu_info["driver"] = "VBoxDisp.dll / vmwgfx"
+                    gpu_info["opengl_supported"] = "OpenGL 2.1 (VirtualBox Guest)"
+                    gpu_info["vulkan_supported"] = False
+                    gpu_info["vulkan_details"] = "VirtualBox virtual display controller has no hardware Vulkan."
+                elif "Intel" in val or "8086" in pnp_id:
+                    gpu_info["vendor"] = "Intel"
+                    is_sandy_bridge = (
+                        any(x in val for x in ["HD Graphics 2000", "HD Graphics 3000", "2000", "3000"]) or
+                        any(dev in pnp_id.upper() for dev in ["DEV_0102", "DEV_0106", "DEV_0112", "DEV_0116", "DEV_0122", "DEV_0126"]) or
+                        any(c in cpu_model for c in ["i5-2400", "i3-2100", "i5-2500", "i7-2600", "Core(TM) i5-2", "Core(TM) i3-2", "Core(TM) i7-2"])
+                    )
+                    if is_sandy_bridge:
+                        gpu_info["is_intel_legacy"] = True
+                        gpu_info["is_intel_hd_2000"] = True
+                        gpu_info["driver"] = drv_ver or "igdumdim64.dll / i915"
+                        gpu_info["opengl_supported"] = "OpenGL 3.1 (Mesa crocus equivalent)"
+                        gpu_info["vulkan_supported"] = False
+                        gpu_info["vulkan_details"] = "Intel Sandy Bridge architecture does not feature hardware Vulkan support."
+                    else:
+                        gpu_info["opengl_supported"] = "OpenGL 4.5+ (Intel Iris/UHD)"
+                        gpu_info["vulkan_supported"] = True
+                elif "NVIDIA" in val or "10DE" in pnp_id.upper():
+                    gpu_info["vendor"] = "NVIDIA"
+                    gpu_info["vulkan_supported"] = True
+                elif "AMD" in val or "Radeon" in val or "1002" in pnp_id.upper():
+                    gpu_info["vendor"] = "AMD"
+                    gpu_info["vulkan_supported"] = True
             except Exception:
                 pass
 
@@ -396,7 +409,7 @@ class HardwareDetector:
                 "code": "modern",
                 "recommended": True,
                 "reasons": ["Hardware satisfies modern GPU and memory requirements."],
-                "compositor_effects": "Full (Glassmorphism, orbital transitions, smooth window snapping)",
+                "compositor_effects": "Full (Glassmorphism, fluid transitions, smooth window snapping)",
             }
 
     def _generate_diagnostics(self):

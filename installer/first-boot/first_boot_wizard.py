@@ -609,7 +609,7 @@ class GiriFirstBootWizard(tk.Tk):
         desc = (
             "Select how Giri Space renders graphics on your hardware:\n\n"
             "• Giri Classic: Ultra-lightweight rendering, minimal animations (Recommended for Intel HD 2000, 4-8GB RAM, HDDs)\n"
-            "• Giri Modern: Fluid animations, orbital glassmorphism, rich shadows (Recommended for modern dedicated GPUs)"
+            "• Giri Modern: Fluid animations, modern glassmorphism, rich shadows (Recommended for modern dedicated GPUs)"
         )
         tk.Label(self.content_frame, text=desc, font=("Segoe UI", 10), justify="left", fg="#a0aec0", bg="#080c1a").pack(anchor="w", pady=(0, 15))
 

@@ -1,6 +1,6 @@
 [Desktop Entry]
 Name=Giri Space (Modern)
-Comment=Modern Giri OS Desktop Environment with hardware acceleration and orbital visual effects
+Comment=Modern Giri OS Desktop Environment with hardware acceleration and fluid visual effects
 Exec=/usr/bin/giri-session --profile modern
 TryExec=/usr/bin/giri-session
 Icon=giri-os-icon

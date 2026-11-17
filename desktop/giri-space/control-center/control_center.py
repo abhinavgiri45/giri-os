@@ -698,7 +698,7 @@ class GiriControlCenter(tk.Toplevel):
 
         p_choice = tk.StringVar(value="classic" if "Classic" in self.hw_profile.get("tier", {}).get("profile_name", "") else "modern")
         tk.Radiobutton(card_p, text="Giri Classic — Lightweight, low RAM (< 450 MB), optimized for Intel HD 2000", variable=p_choice, value="classic", font=("Segoe UI", 9, "bold"), fg="#00d2ff", bg="#0f172a", selectcolor="#16223d").pack(anchor="w", pady=2)
-        tk.Radiobutton(card_p, text="Giri Modern — High fidelity, orbital glassmorphic compositing", variable=p_choice, value="modern", font=("Segoe UI", 9, "bold"), fg="#c2d5ee", bg="#0f172a", selectcolor="#16223d").pack(anchor="w", pady=2)
+        tk.Radiobutton(card_p, text="Giri Modern — High fidelity, fluid glassmorphic compositing", variable=p_choice, value="modern", font=("Segoe UI", 9, "bold"), fg="#c2d5ee", bg="#0f172a", selectcolor="#16223d").pack(anchor="w", pady=2)
 
         # Dock Preferences
         card_d = tk.Frame(self.content, bg="#0f172a", padx=16, pady=12)
