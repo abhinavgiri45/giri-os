@@ -158,15 +158,7 @@ jobs:
 
           echo "[+] Auditing ISOLINUX BIOS COM32 modules architecture..."
           if [ -f /mnt/giri_iso_audit/isolinux/vesamenu.c32 ]; then
-            python3 -c "
-import sys
-with open('/mnt/giri_iso_audit/isolinux/vesamenu.c32', 'rb') as f:
-    hdr = f.read(16)
-    if hdr.startswith(b'\x7fELF') and hdr[4] == 2:
-        print('[-] CRITICAL AUDIT FAILURE: isolinux/vesamenu.c32 is a 64-bit ELF binary, incompatible with BIOS!')
-        sys.exit(1)
-print('[+] PASSED: isolinux/vesamenu.c32 is verified 32-bit BIOS COM32 compatible.')
-"
+            python3 -c "import sys; f=open('/mnt/giri_iso_audit/isolinux/vesamenu.c32', 'rb'); hdr=f.read(16); sys.exit(1 if hdr.startswith(b'\x7fELF') and hdr[4] == 2 else 0)" && echo "[+] PASSED: isolinux/vesamenu.c32 is verified 32-bit BIOS COM32 compatible." || (echo "[-] CRITICAL AUDIT FAILURE: isolinux/vesamenu.c32 is a 64-bit ELF binary!" && exit 1)
           fi
 
           echo "[+] Auditing UEFI Bootloader structures..."
