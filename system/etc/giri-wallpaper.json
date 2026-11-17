@@ -1,6 +1,6 @@
 {
-  "current_wallpaper": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png",
-  "current_name": "Giri OS \u2014 Dark Edition",
+  "current_wallpaper": "/usr/share/backgrounds/giri-os-default-dark.png",
+  "current_name": "Giri OS — Dark Edition",
   "theme": "dark",
   "auto_switch_theme": true,
   "user_manually_selected": false,
@@ -8,9 +8,9 @@
   "is_solid_color": false,
   "solid_color": "#050811",
   "per_space": {
-    "1": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-os-default-dark.png",
-    "2": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\giri-origin.png",
-    "3": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\infinite-flow.png",
-    "4": "C:\\Users\\abhin\\OneDrive\\Desktop\\giri-os\\branding\\wallpapers\\quantum-form.png"
+    "1": "/usr/share/backgrounds/giri-os-default-dark.png",
+    "2": "/usr/share/backgrounds/giri-origin.png",
+    "3": "/usr/share/backgrounds/infinite-flow.png",
+    "4": "/usr/share/backgrounds/quantum-form.png"
   }
 }

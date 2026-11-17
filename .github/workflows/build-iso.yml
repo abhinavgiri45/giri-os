@@ -156,7 +156,25 @@ jobs:
 
           echo "[+] Kernel, Initrd, and SquashFS verified present."
 
-          echo "[+] Auditing Giri Space desktop session in final SquashFS..."
+          echo "[+] Auditing ISOLINUX BIOS COM32 modules architecture..."
+          if [ -f /mnt/giri_iso_audit/isolinux/vesamenu.c32 ]; then
+            python3 -c "
+import sys
+with open('/mnt/giri_iso_audit/isolinux/vesamenu.c32', 'rb') as f:
+    hdr = f.read(16)
+    if hdr.startswith(b'\x7fELF') and hdr[4] == 2:
+        print('[-] CRITICAL AUDIT FAILURE: isolinux/vesamenu.c32 is a 64-bit ELF binary, incompatible with BIOS!')
+        sys.exit(1)
+print('[+] PASSED: isolinux/vesamenu.c32 is verified 32-bit BIOS COM32 compatible.')
+"
+          fi
+
+          echo "[+] Auditing UEFI Bootloader structures..."
+          if [ -d /mnt/giri_iso_audit/EFI/BOOT ] || [ -f /mnt/giri_iso_audit/boot/grub/grub.cfg ]; then
+            echo "[+] PASSED: UEFI boot structures verified on ISO."
+          fi
+
+          echo "[+] Auditing Giri Space desktop session and assets in final SquashFS..."
           sudo mkdir -p /mnt/giri_squashfs_audit
           sudo mount -t squashfs -o loop,ro /mnt/giri_iso_audit/live/filesystem.squashfs /mnt/giri_squashfs_audit
           
@@ -174,7 +192,26 @@ jobs:
             exit 1
           fi
 
-          echo "[+] PASSED: /usr/share/xsessions/giri-space-classic.desktop and executable /usr/bin/giri-session verified in final SquashFS!"
+          if [ ! -f /mnt/giri_squashfs_audit/usr/share/backgrounds/giri-origin.png ]; then
+            echo "[-] CRITICAL AUDIT FAILURE: Signature wallpaper /usr/share/backgrounds/giri-origin.png missing from SquashFS!"
+            sudo umount /mnt/giri_squashfs_audit || true
+            sudo umount /mnt/giri_iso_audit || true
+            exit 1
+          fi
+
+          if [ ! -f /mnt/giri_squashfs_audit/usr/share/plymouth/themes/giri-genesis/giri-genesis.plymouth ]; then
+            echo "[-] CRITICAL AUDIT FAILURE: Plymouth theme missing from SquashFS!"
+            sudo umount /mnt/giri_squashfs_audit || true
+            sudo umount /mnt/giri_iso_audit || true
+            exit 1
+          fi
+
+          if [ -d /mnt/giri_squashfs_audit/var/cache/fontconfig ]; then
+            echo "[+] Pre-generated Fontconfig system caches verified in SquashFS:"
+            ls -la /mnt/giri_squashfs_audit/var/cache/fontconfig/ || true
+          fi
+
+          echo "[+] PASSED: /usr/share/xsessions/giri-space-classic.desktop, executable /usr/bin/giri-session, wallpapers, and Plymouth verified in final SquashFS!"
           sudo umount /mnt/giri_squashfs_audit || true
           sudo umount /mnt/giri_iso_audit || true
 

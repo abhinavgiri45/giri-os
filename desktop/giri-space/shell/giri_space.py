@@ -32,8 +32,50 @@ except ImportError:
 
 # Paths
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-WALLPAPER_DIR = os.path.join(ROOT_DIR, "branding", "wallpapers")
-WALLPAPER_CONFIG = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+SYS_WALLPAPER_DIR = "/usr/share/backgrounds"
+if os.path.isdir(SYS_WALLPAPER_DIR):
+    WALLPAPER_DIR = SYS_WALLPAPER_DIR
+else:
+    WALLPAPER_DIR = os.path.join(ROOT_DIR, "branding", "wallpapers")
+
+SYS_WALLPAPER_CONFIG = "/etc/giri-wallpaper.json"
+USER_WALLPAPER_CONFIG = os.path.expanduser("~/.config/giri/wallpaper.json")
+if os.path.isfile(USER_WALLPAPER_CONFIG):
+    WALLPAPER_CONFIG = USER_WALLPAPER_CONFIG
+elif os.path.isfile(SYS_WALLPAPER_CONFIG):
+    WALLPAPER_CONFIG = SYS_WALLPAPER_CONFIG
+else:
+    WALLPAPER_CONFIG = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+
+def resolve_wallpaper_path(path_or_filename):
+    """
+    Robustly resolves a wallpaper file path across both live ISO (/usr/share/backgrounds)
+    and development workspace environments, handling Windows/Linux cross-platform paths.
+    """
+    if not path_or_filename:
+        return None
+    if os.path.isfile(path_or_filename):
+        return path_or_filename
+
+    basename = os.path.basename(path_or_filename)
+    candidate_dirs = [
+        "/usr/share/backgrounds",
+        os.path.join(ROOT_DIR, "branding", "wallpapers"),
+        WALLPAPER_DIR,
+        "/usr/share/wallpapers",
+    ]
+    for c_dir in candidate_dirs:
+        candidate_file = os.path.join(c_dir, basename)
+        if os.path.isfile(candidate_file):
+            return candidate_file
+
+    for fallback_name in ["giri-os-default-dark.png", "giri-origin.png"]:
+        for c_dir in candidate_dirs:
+            candidate_file = os.path.join(c_dir, fallback_name)
+            if os.path.isfile(candidate_file):
+                return candidate_file
+
+    return None
 
 # Import local control center
 sys.path.insert(0, ROOT_DIR)
@@ -55,7 +97,13 @@ class GiriSpaceDesktop(tk.Tk):
         self.non_interactive = non_interactive
 
         self.title("Giri Space — Desktop Environment")
-        self.geometry("1120x720")
+        # Initialize geometry to fill available display resolution seamlessly
+        try:
+            sw = self.winfo_screenwidth()
+            sh = self.winfo_screenheight()
+            self.geometry(f"{sw}x{sh}+0+0")
+        except Exception:
+            self.geometry("1024x768+0+0")
         self.minsize(960, 600)
         self.configure(bg="#050811")
 
@@ -92,39 +140,56 @@ class GiriSpaceDesktop(tk.Tk):
             self.withdraw()
 
     def _load_wallpaper_config(self):
-        default_wp = os.path.join(WALLPAPER_DIR, "giri-os-default-dark.png")
-        if not os.path.isfile(default_wp):
-            default_wp = os.path.join(WALLPAPER_DIR, "giri-origin.png")
-        if os.path.isfile(WALLPAPER_CONFIG):
-            try:
-                with open(WALLPAPER_CONFIG, "r", encoding="utf-8") as f:
-                    cfg = json.load(f)
-                    if not os.path.isfile(cfg.get("current_wallpaper", "")):
-                        cfg["current_wallpaper"] = default_wp
-                    return cfg
-            except Exception:
-                pass
-        return {
-            "current_wallpaper": default_wp,
-            "current_name": "Giri OS — Dark Edition",
-            "theme": "dark",
-            "auto_switch_theme": True,
-            "user_manually_selected": False,
-            "mode": "Fill",
-            "is_solid_color": False,
-            "solid_color": "#050811",
-            "per_space": {
-                "1": default_wp,
-                "2": os.path.join(WALLPAPER_DIR, "giri-origin.png"),
-                "3": os.path.join(WALLPAPER_DIR, "infinite-flow.png"),
-                "4": os.path.join(WALLPAPER_DIR, "quantum-form.png")
+        default_wp = resolve_wallpaper_path("giri-os-default-dark.png") or resolve_wallpaper_path("giri-origin.png")
+        if not default_wp:
+            default_wp = os.path.join(WALLPAPER_DIR, "giri-os-default-dark.png")
+
+        cfg = None
+        config_candidates = [
+            os.path.expanduser("~/.config/giri/wallpaper.json"),
+            "/etc/giri-wallpaper.json",
+            WALLPAPER_CONFIG
+        ]
+        for c_path in config_candidates:
+            if os.path.isfile(c_path):
+                try:
+                    with open(c_path, "r", encoding="utf-8") as f:
+                        cfg = json.load(f)
+                        break
+                except Exception:
+                    pass
+
+        if not cfg:
+            cfg = {
+                "current_wallpaper": default_wp,
+                "current_name": "Giri OS — Dark Edition",
+                "theme": "dark",
+                "auto_switch_theme": True,
+                "user_manually_selected": False,
+                "mode": "Fill",
+                "is_solid_color": False,
+                "solid_color": "#050811",
+                "per_space": {
+                    "1": default_wp,
+                    "2": resolve_wallpaper_path("giri-origin.png") or default_wp,
+                    "3": resolve_wallpaper_path("infinite-flow.png") or default_wp,
+                    "4": resolve_wallpaper_path("quantum-form.png") or default_wp
+                }
             }
-        }
+        else:
+            resolved_cur = resolve_wallpaper_path(cfg.get("current_wallpaper", ""))
+            cfg["current_wallpaper"] = resolved_cur or default_wp
+            if "per_space" in cfg and isinstance(cfg["per_space"], dict):
+                for s in ["1", "2", "3", "4"]:
+                    p = cfg["per_space"].get(s, "")
+                    cfg["per_space"][s] = resolve_wallpaper_path(p) or default_wp
+        return cfg
 
     def _save_wallpaper_config(self):
-        os.makedirs(os.path.dirname(WALLPAPER_CONFIG), exist_ok=True)
+        user_cfg = os.path.expanduser("~/.config/giri/wallpaper.json")
+        os.makedirs(os.path.dirname(user_cfg), exist_ok=True)
         try:
-            with open(WALLPAPER_CONFIG, "w", encoding="utf-8") as f:
+            with open(user_cfg, "w", encoding="utf-8") as f:
                 json.dump(self.wallpaper_config, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not save wallpaper configuration: {e}")
@@ -201,11 +266,11 @@ class GiriSpaceDesktop(tk.Tk):
         # 2. Check Wallpaper File for Active Space
         space_key = str(self.active_space)
         wp_file = self.wallpaper_config.get("per_space", {}).get(space_key)
-        if not wp_file or not os.path.isfile(wp_file):
-            wp_file = self.wallpaper_config.get("current_wallpaper", "")
-
-        if not os.path.isfile(wp_file):
-            wp_file = os.path.join(WALLPAPER_DIR, "giri-origin.png")
+        wp_file = resolve_wallpaper_path(wp_file)
+        if not wp_file:
+            wp_file = resolve_wallpaper_path(self.wallpaper_config.get("current_wallpaper", ""))
+        if not wp_file:
+            wp_file = resolve_wallpaper_path("giri-os-default-dark.png") or resolve_wallpaper_path("giri-origin.png")
 
         mode = self.wallpaper_config.get("mode", "Fill")
 

@@ -22,10 +22,22 @@ dpkg --add-architecture i386 || true
 # 2. Hostname Setup
 echo "giri-os" > /etc/hostname
 
+# 2b. Pre-Generate Fontconfig System Caches for Instant Early-Boot Splash Rendering
+echo ">>> [Giri OS] Pre-generating fontconfig system caches before squashfs compression..."
+if command -v fc-cache >/dev/null 2>&1; then
+    mkdir -p /var/cache/fontconfig
+    fc-cache -s -f -v || true
+    echo ">>> Fontconfig cache generated at /var/cache/fontconfig:"
+    ls -la /var/cache/fontconfig || true
+fi
+
 # 3. Configure Plymouth Boot Splash Theme
 if [ -d /usr/share/plymouth/themes/giri-genesis ]; then
     echo ">>> Setting Plymouth default theme to giri-genesis..."
     plymouth-set-default-theme -R giri-genesis || true
+    if command -v update-initramfs >/dev/null 2>&1; then
+        update-initramfs -u -k all || true
+    fi
 fi
 
 # 4. Configure Default Live User Privileges (giri & autologin)

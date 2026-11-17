@@ -73,6 +73,37 @@ if [ -f "${PROJECT_ROOT}/scripts/patch-live-build.py" ]; then
     python3 "${PROJECT_ROOT}/scripts/patch-live-build.py" || true
 fi
 
+# Helper: Locate and copy 32-bit BIOS Syslinux COM32 modules (strictly excluding 64-bit EFI modules)
+copy_bios_com32_module() {
+    local mod="$1"
+    local dest_dir="$2"
+    local found=""
+
+    # Prioritized search list: explicit 32-bit BIOS syslinux module paths
+    for candidate in \
+        "/usr/lib/syslinux/modules/bios/${mod}" \
+        "/usr/lib/ISOLINUX/${mod}" \
+        "/usr/share/syslinux/themes/debian-bookworm/isolinux-live/${mod}" \
+        "/usr/share/syslinux/${mod}"; do
+        if [ -f "${candidate}" ]; then
+            case "${candidate}" in
+                *efi*) ;; # Explicitly skip 64-bit EFI modules
+                *) found="${candidate}"; break ;;
+            esac
+        fi
+    done
+
+    # Fallback search strictly excluding any path containing 'efi'
+    if [ -z "${found}" ]; then
+        found=$(find /usr/lib/syslinux /usr/share/syslinux -not -path "*/efi*" -name "${mod}" 2>/dev/null | head -n 1 || true)
+    fi
+
+    if [ -n "${found}" ] && [ -f "${found}" ]; then
+        mkdir -p "${dest_dir}"
+        cp -fL "${found}" "${dest_dir}/${mod}"
+    fi
+}
+
 # Dereference and replace any symlinks in host live-build bootloader templates with actual binaries
 if [ -d /usr/share/live/build/bootloaders ]; then
     echo "[+] Resolving and dereferencing bootloader template symlinks in /usr/share/live/build/bootloaders..."
@@ -83,8 +114,8 @@ if [ -d /usr/share/live/build/bootloaders ]; then
         fi
     done
     for mod in vesamenu.c32 ldlinux.c32 libcom32.c32 libutil.c32 libmenu.c32 libgpl.c32 hdt.c32 chain.c32 menu.c32; do
-        find /usr/lib/syslinux /usr/share/syslinux -name "$mod" -exec cp -fL {} /usr/share/live/build/bootloaders/syslinux_common/ 2>/dev/null \; || true
-        find /usr/lib/syslinux /usr/share/syslinux -name "$mod" -exec cp -fL {} /usr/share/live/build/bootloaders/isolinux/ 2>/dev/null \; || true
+        copy_bios_com32_module "$mod" /usr/share/live/build/bootloaders/syslinux_common/
+        copy_bios_com32_module "$mod" /usr/share/live/build/bootloaders/isolinux/
     done
 fi
 
@@ -274,13 +305,33 @@ for mbr_path in /usr/lib/ISOLINUX/isohdpfx.bin /usr/share/isolinux/isohdpfx.bin 
     fi
 done
 
-# Copy real COM32 modules into bootloaders, includes.binary, and includes.chroot
+# Copy real 32-bit BIOS COM32 modules into bootloaders, includes.binary, and includes.chroot
 for mod in vesamenu.c32 ldlinux.c32 libcom32.c32 libutil.c32 libmenu.c32 libgpl.c32 hdt.c32 chain.c32 menu.c32; do
-    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${BOOTLOADERS_COMMON}/" \; 2>/dev/null || true
-    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${BOOTLOADERS_ISOLINUX}/" \; 2>/dev/null || true
-    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${INCLUDES_BINARY}/isolinux/" \; 2>/dev/null || true
-    find /usr/lib/syslinux /usr/share/syslinux -name "${mod}" -exec cp -fL {} "${INCLUDES_CHROOT}/usr/lib/syslinux/modules/bios/" \; 2>/dev/null || true
+    copy_bios_com32_module "${mod}" "${BOOTLOADERS_COMMON}"
+    copy_bios_com32_module "${mod}" "${BOOTLOADERS_ISOLINUX}"
+    copy_bios_com32_module "${mod}" "${INCLUDES_BINARY}/isolinux"
+    copy_bios_com32_module "${mod}" "${INCLUDES_CHROOT}/usr/lib/syslinux/modules/bios"
 done
+
+# Verify that all staged COM32 modules are genuine 32-bit BIOS modules (not 64-bit EFI)
+echo "[+] Verifying staged BIOS COM32 module architectures..."
+for staged_mod in "${INCLUDES_BINARY}/isolinux/"*.c32; do
+    if [ -f "${staged_mod}" ]; then
+        if command -v python3 >/dev/null 2>&1; then
+            python3 -c "
+import sys
+with open('${staged_mod}', 'rb') as f:
+    hdr = f.read(16)
+    if hdr.startswith(b'\x7fELF'):
+        ei_class = hdr[4]
+        if ei_class == 2:
+            print('[-] ERROR: ${staged_mod} is a 64-bit ELF binary, incompatible with BIOS COM32!')
+            sys.exit(1)
+"
+        fi
+    fi
+done
+echo "[+] Staged BIOS COM32 modules verified (32-bit BIOS compatible)."
 
 # Provide fallback bootlogo cpio archive for Ubuntu live-build host tool compatibility
 echo -n "" | cpio -o -H newc > "${BOOTLOADERS_ISOLINUX}/bootlogo" 2>/dev/null || touch "${BOOTLOADERS_ISOLINUX}/bootlogo" || true
@@ -310,7 +361,7 @@ if [[ -z "${ISO_OUTPUT}" || ! -f "${ISO_OUTPUT}" ]]; then
 fi
 
 mkdir -p "${RELEASES_DIR}"
-ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v4-amd64.iso}"
+ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v5-amd64.iso}"
 TARGET_ISO="${RELEASES_DIR}/${ISO_FILENAME}"
 mv -f "${ISO_OUTPUT}" "${TARGET_ISO}"
 

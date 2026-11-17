@@ -38,8 +38,8 @@ FLAG_FILE = os.path.join(FLAG_DIR, "first-boot-done")
 CONFIG_FILE = os.path.join(FLAG_DIR, "user-setup.json")
 SYSTEM_FLAG_DIR = "/var/lib/giri"
 SYSTEM_FLAG_FILE = os.path.join(SYSTEM_FLAG_DIR, "first-boot-done")
-SYSTEM_CONFIG_FILE = os.path.join(ROOT_DIR, "system", "etc", "giri-firstboot.json")
-WALLPAPER_CONFIG_FILE = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+SYSTEM_CONFIG_FILE = "/etc/giri-firstboot.json" if os.path.exists("/etc") and os.access("/etc", os.W_OK) else os.path.join(FLAG_DIR, "system-firstboot.json")
+WALLPAPER_CONFIG_FILE = os.path.join(FLAG_DIR, "wallpaper.json")
 
 
 def is_live_session():
@@ -683,7 +683,18 @@ class GiriFirstBootWizard(tk.Tk):
             pass
 
         # 3. Wallpaper configuration
-        wp_path = os.path.join(ROOT_DIR, "branding", "wallpapers", self.config_data["wallpaper_choice"])
+        wp_choice = self.config_data.get("wallpaper_choice", "giri-os-default-dark.png")
+        if os.path.isdir("/usr/share/backgrounds"):
+            wp_path = f"/usr/share/backgrounds/{wp_choice}"
+            space_2 = "/usr/share/backgrounds/giri-origin.png"
+            space_3 = "/usr/share/backgrounds/infinite-flow.png"
+            space_4 = "/usr/share/backgrounds/quantum-form.png"
+        else:
+            wp_path = os.path.join(ROOT_DIR, "branding", "wallpapers", wp_choice)
+            space_2 = os.path.join(ROOT_DIR, "branding", "wallpapers", "giri-origin.png")
+            space_3 = os.path.join(ROOT_DIR, "branding", "wallpapers", "infinite-flow.png")
+            space_4 = os.path.join(ROOT_DIR, "branding", "wallpapers", "quantum-form.png")
+
         wp_cfg = {
             "current_wallpaper": wp_path,
             "current_name": f"Giri OS — {self.config_data['theme_mode']} Edition",
@@ -695,16 +706,24 @@ class GiriFirstBootWizard(tk.Tk):
             "solid_color": "#050811",
             "per_space": {
                 "1": wp_path,
-                "2": os.path.join(ROOT_DIR, "branding", "wallpapers", "giri-origin.png"),
-                "3": os.path.join(ROOT_DIR, "branding", "wallpapers", "infinite-flow.png"),
-                "4": os.path.join(ROOT_DIR, "branding", "wallpapers", "quantum-form.png")
+                "2": space_2,
+                "3": space_3,
+                "4": space_4
             }
         }
+        os.makedirs(os.path.dirname(WALLPAPER_CONFIG_FILE), exist_ok=True)
         try:
             with open(WALLPAPER_CONFIG_FILE, "w", encoding="utf-8") as f:
                 json.dump(wp_cfg, f, indent=2)
         except Exception:
             pass
+
+        if os.path.exists("/etc") and os.access("/etc", os.W_OK):
+            try:
+                with open("/etc/giri-wallpaper.json", "w", encoding="utf-8") as f:
+                    json.dump(wp_cfg, f, indent=2)
+            except Exception:
+                pass
 
         # 4. Completion Flag
         # Only write permanent system flag if NOT in a live ISO session

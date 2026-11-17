@@ -79,9 +79,11 @@ calamares
 calamares-settings-debian
 
 # Fonts & Visual Assets
+fontconfig
 fonts-dejavu
 fonts-inter
-fonts-noto
+fonts-noto-core
+fonts-noto-ui-core
 fonts-font-awesome
 arc-theme
 papirus-icon-theme

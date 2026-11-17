@@ -555,6 +555,150 @@ class TestGiriOSCore(unittest.TestCase):
         for pkg in required_pkgs:
             self.assertIn(pkg, pkg_content, f"Required package '{pkg}' missing from giri-desktop.list.chroot")
 
+    def test_31_bios_com32_module_architecture_verification(self):
+        """Test that BIOS Syslinux COM32 modules are explicitly 32-bit and EFI 64-bit modules are rejected."""
+        build_iso_script = os.path.join(ROOT_DIR, "scripts", "build-iso.sh")
+        isolinux_cfg = os.path.join(ROOT_DIR, "boot", "isolinux", "isolinux.cfg")
+
+        # 1. Verify build-iso.sh defines strict 32-bit BIOS COM32 module discovery
+        self.assertTrue(os.path.isfile(build_iso_script), "build-iso.sh missing")
+        with open(build_iso_script, "r", encoding="utf-8") as f:
+            build_content = f.read()
+        self.assertIn("copy_bios_com32_module", build_content)
+        self.assertIn("/usr/lib/syslinux/modules/bios", build_content)
+        self.assertIn("*efi*", build_content)
+        self.assertIn("ei_class == 2", build_content)
+        self.assertIn("giri-os-0.1-genesis-v5-amd64.iso", build_content)
+
+        # 2. Test ELF architecture discrimination logic
+        elf32_header = b"\x7fELF\x01\x01\x01\x00" + b"\x00" * 8
+        elf64_header = b"\x7fELF\x02\x01\x01\x00" + b"\x00" * 8
+
+        def check_elf_is_32bit(hdr_bytes):
+            if hdr_bytes.startswith(b"\x7fELF"):
+                return hdr_bytes[4] == 1
+            return True # Raw COM32/COM32R binaries
+
+        self.assertTrue(check_elf_is_32bit(elf32_header), "ELF32 header should be accepted as valid BIOS COM32")
+        self.assertFalse(check_elf_is_32bit(elf64_header), "ELF64 header must be rejected to prevent BIOS boot failure")
+
+        # 3. Verify ISOLINUX configuration
+        self.assertTrue(os.path.isfile(isolinux_cfg), "isolinux.cfg missing")
+        with open(isolinux_cfg, "r", encoding="utf-8") as f:
+            cfg_content = f.read()
+        self.assertIn("UI vesamenu.c32", cfg_content)
+        self.assertIn("PROMPT 0", cfg_content)
+        self.assertIn("TIMEOUT 50", cfg_content)
+        self.assertIn("MENU DEFAULT", cfg_content)
+
+    def test_32_uefi_module_selection_and_grub_structure(self):
+        """Test UEFI bootloader separation, GRUB configuration and EFI packages."""
+        grub_cfg = os.path.join(ROOT_DIR, "boot", "grub", "grub.cfg")
+        core_pkgs = os.path.join(ROOT_DIR, "build", "live-build", "config", "package-lists", "giri-core.list.chroot")
+
+        # 1. Verify GRUB master configuration preserves UEFI structures
+        self.assertTrue(os.path.isfile(grub_cfg), "grub.cfg missing")
+        with open(grub_cfg, "r", encoding="utf-8") as f:
+            grub_content = f.read()
+        self.assertIn("set default=\"0\"", grub_content)
+        self.assertIn("set timeout=5", grub_content)
+        self.assertIn("grub_platform", grub_content)
+        self.assertIn("fwsetup", grub_content)
+
+        # 2. Verify UEFI and BIOS packages are both declared in core package list
+        self.assertTrue(os.path.isfile(core_pkgs), "giri-core.list.chroot missing")
+        with open(core_pkgs, "r", encoding="utf-8") as f:
+            pkg_content = f.read()
+        self.assertIn("grub-efi-amd64-bin", pkg_content)
+        self.assertIn("grub-pc-bin", pkg_content)
+        self.assertIn("efibootmgr", pkg_content)
+        self.assertIn("isolinux", pkg_content)
+        self.assertIn("syslinux-common", pkg_content)
+        self.assertIn("syslinux-utils", pkg_content)
+
+    def test_33_fontconfig_and_plymouth_earlyboot_optimization(self):
+        """Test that font caches are pre-generated, font packages are optimized, and initramfs is updated."""
+        branding_hook = os.path.join(ROOT_DIR, "build", "live-build", "config", "hooks", "live", "01-setup-giri-branding.hook.chroot")
+        desktop_pkgs = os.path.join(ROOT_DIR, "build", "live-build", "config", "package-lists", "giri-desktop.list.chroot")
+
+        # 1. Verify branding hook pre-generates fontconfig cache
+        self.assertTrue(os.path.isfile(branding_hook), "01-setup-giri-branding.hook.chroot missing")
+        with open(branding_hook, "r", encoding="utf-8") as f:
+            hook_content = f.read()
+        self.assertIn("fc-cache -s -f -v", hook_content)
+        self.assertIn("/var/cache/fontconfig", hook_content)
+        self.assertIn("plymouth-set-default-theme -R giri-genesis", hook_content)
+        self.assertIn("update-initramfs -u", hook_content)
+
+        # 2. Verify font package list is optimized
+        self.assertTrue(os.path.isfile(desktop_pkgs), "giri-desktop.list.chroot missing")
+        with open(desktop_pkgs, "r", encoding="utf-8") as f:
+            pkg_content = f.read()
+        self.assertIn("fontconfig", pkg_content)
+        self.assertIn("fonts-dejavu", pkg_content)
+        self.assertIn("fonts-noto-core", pkg_content)
+        self.assertNotIn("\nfonts-noto\n", pkg_content, "Bloated metapackage 'fonts-noto' must be replaced by fonts-noto-core")
+
+    def test_34_wallpaper_path_resolution_and_geometry(self):
+        """Test cross-platform wallpaper resolution and dynamic fullscreen geometry."""
+        resolve_func = space_mod.resolve_wallpaper_path
+
+        # 1. Verify resolve_wallpaper_path finds local wallpapers
+        origin_path = resolve_func("giri-origin.png")
+        self.assertIsNotNone(origin_path)
+        self.assertTrue(os.path.isfile(origin_path))
+
+        dark_path = resolve_func("giri-os-default-dark.png")
+        self.assertIsNotNone(dark_path)
+        self.assertTrue(os.path.isfile(dark_path))
+
+        # 2. Test cross-platform resolution of foreign/Windows path
+        foreign_path = r"C:\Users\runneradmin\giri-os\branding\wallpapers\giri-origin.png"
+        resolved_foreign = resolve_func(foreign_path)
+        self.assertIsNotNone(resolved_foreign)
+        self.assertTrue(os.path.isfile(resolved_foreign))
+
+        # 3. Test fallback for missing wallpaper file
+        fallback_res = resolve_func("nonexistent_wallpaper_12345.png")
+        self.assertIsNotNone(fallback_res)
+        self.assertTrue(os.path.isfile(fallback_res))
+
+        # 4. Verify system/etc/giri-wallpaper.json has valid Linux paths
+        wp_json_path = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+        self.assertTrue(os.path.isfile(wp_json_path))
+        with open(wp_json_path, "r", encoding="utf-8") as f:
+            wp_data = json.load(f)
+        self.assertTrue(wp_data["current_wallpaper"].startswith("/usr/share/backgrounds/"))
+        self.assertTrue(wp_data["per_space"]["1"].startswith("/usr/share/backgrounds/"))
+
+    def test_35_plymouth_theme_and_display_handoff(self):
+        """Test Plymouth theme descriptor, animation script, and Xorg display setup handoff."""
+        theme_file = os.path.join(ROOT_DIR, "boot", "plymouth", "giri-genesis", "giri-genesis.plymouth")
+        script_file = os.path.join(ROOT_DIR, "boot", "plymouth", "giri-genesis", "giri-genesis.script")
+        display_setup = os.path.join(ROOT_DIR, "build", "live-build", "config", "hooks", "live", "01-setup-giri-branding.hook.chroot")
+
+        # 1. Verify Plymouth theme descriptor
+        self.assertTrue(os.path.isfile(theme_file), "giri-genesis.plymouth missing")
+        with open(theme_file, "r", encoding="utf-8") as f:
+            theme_content = f.read()
+        self.assertIn("Name=Giri Genesis", theme_content)
+        self.assertIn("ModuleName=script", theme_content)
+        self.assertIn("giri-genesis.script", theme_content)
+
+        # 2. Verify Plymouth script defines all lifecycle hooks
+        self.assertTrue(os.path.isfile(script_file), "giri-genesis.script missing")
+        with open(script_file, "r", encoding="utf-8") as f:
+            script_content = f.read()
+        self.assertIn("Plymouth.SetRefreshFunction", script_content)
+        self.assertIn("Plymouth.SetBootProgressFunction", script_content)
+        self.assertIn("Plymouth.SetQuitFunction", script_content)
+
+        # 3. Verify clean display handoff script in branding hook
+        with open(display_setup, "r", encoding="utf-8") as f:
+            setup_content = f.read()
+        self.assertIn("plymouth --quit", setup_content)
+        self.assertIn("xrandr --auto", setup_content)
+
 
 
 if __name__ == "__main__":

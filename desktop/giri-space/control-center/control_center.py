@@ -26,8 +26,21 @@ from PIL import Image, ImageTk
 
 # Project paths
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
-WALLPAPER_DIR = os.path.join(ROOT_DIR, "branding", "wallpapers")
-WALLPAPER_CONFIG = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+SYS_WALLPAPER_DIR = "/usr/share/backgrounds"
+if os.path.isdir(SYS_WALLPAPER_DIR):
+    WALLPAPER_DIR = SYS_WALLPAPER_DIR
+else:
+    WALLPAPER_DIR = os.path.join(ROOT_DIR, "branding", "wallpapers")
+
+SYS_WALLPAPER_CONFIG = "/etc/giri-wallpaper.json"
+USER_WALLPAPER_CONFIG = os.path.expanduser("~/.config/giri/wallpaper.json")
+if os.path.isfile(USER_WALLPAPER_CONFIG):
+    WALLPAPER_CONFIG = USER_WALLPAPER_CONFIG
+elif os.path.isfile(SYS_WALLPAPER_CONFIG):
+    WALLPAPER_CONFIG = SYS_WALLPAPER_CONFIG
+else:
+    WALLPAPER_CONFIG = os.path.join(ROOT_DIR, "system", "etc", "giri-wallpaper.json")
+
 DESKTOP_CONFIG = os.path.join(ROOT_DIR, "system", "etc", "giri-desktop-prefs.json")
 
 # Import local subsystem modules
@@ -158,9 +171,10 @@ class GiriControlCenter(tk.Toplevel):
         }
 
     def _save_wallpaper_config(self):
-        os.makedirs(os.path.dirname(WALLPAPER_CONFIG), exist_ok=True)
+        user_cfg = os.path.expanduser("~/.config/giri/wallpaper.json")
+        os.makedirs(os.path.dirname(user_cfg), exist_ok=True)
         try:
-            with open(WALLPAPER_CONFIG, "w", encoding="utf-8") as f:
+            with open(user_cfg, "w", encoding="utf-8") as f:
                 json.dump(self.wallpaper_config, f, indent=2)
         except Exception as e:
             print(f"Warning: Could not save wallpaper configuration: {e}")
@@ -411,8 +425,10 @@ class GiriControlCenter(tk.Toplevel):
             card.grid(row=row, column=col, padx=8, pady=6, sticky="nsew")
             scroll_frame.grid_columnconfigure(col, weight=1)
 
-            # Try to load thumbnail
+            # Try to load thumbnail (or fall back to full image)
             thumb_path = os.path.join(WALLPAPER_DIR, "thumbnails", wp["filename"])
+            if not os.path.isfile(thumb_path):
+                thumb_path = os.path.join(WALLPAPER_DIR, wp["filename"])
             photo = None
             if os.path.isfile(thumb_path):
                 if thumb_path not in self.thumb_cache:
