@@ -479,6 +479,82 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIn("ln -f", hook_content)
         self.assertIn("memtest", hook_content)
 
+    def test_29_giri_space_session_staging_and_permissions(self):
+        """Test permanent staging of Giri Space session files and execution permissions."""
+        session_desktop = os.path.join(ROOT_DIR, "desktop", "giri-space", "session", "giri-space-classic.desktop")
+        modern_desktop = os.path.join(ROOT_DIR, "desktop", "giri-space", "session", "giri-space-modern.desktop")
+        session_script = os.path.join(ROOT_DIR, "desktop", "giri-space", "session", "giri-session")
+        verify_hook = os.path.join(ROOT_DIR, "build", "live-build", "config", "hooks", "live", "98-verify-giri-session.hook.chroot")
+        build_iso_script = os.path.join(ROOT_DIR, "scripts", "build-iso.sh")
+
+        # 1. Verify session desktop files exist and have correct Exec/TryExec
+        self.assertTrue(os.path.isfile(session_desktop), "giri-space-classic.desktop missing")
+        with open(session_desktop, "r", encoding="utf-8") as f:
+            content = f.read()
+        self.assertIn("Name=Giri Space (Classic)", content)
+        self.assertIn("Exec=/usr/bin/giri-session --profile classic", content)
+        self.assertIn("TryExec=/usr/bin/giri-session", content)
+        self.assertIn("Icon=giri-os-icon", content)
+
+        self.assertTrue(os.path.isfile(modern_desktop), "giri-space-modern.desktop missing")
+        with open(modern_desktop, "r", encoding="utf-8") as f:
+            mod_content = f.read()
+        self.assertIn("Name=Giri Space (Modern)", mod_content)
+        self.assertIn("Exec=/usr/bin/giri-session --profile modern", mod_content)
+
+        # 2. Verify session entrypoint script contents and referenced files
+        self.assertTrue(os.path.isfile(session_script), "giri-session missing")
+        with open(session_script, "r", encoding="utf-8") as f:
+            script_content = f.read()
+        self.assertIn("openbox", script_content)
+        self.assertIn("picom", script_content)
+        self.assertIn("giri_space.py", script_content)
+        self.assertIn("plymouth --quit", script_content)
+
+        # Verify referenced desktop shell script exists
+        shell_py = os.path.join(ROOT_DIR, "desktop", "giri-space", "shell", "giri_space.py")
+        self.assertTrue(os.path.isfile(shell_py), "giri_space.py missing")
+
+        # 3. Verify session verification hook exists and enforces 0755
+        self.assertTrue(os.path.isfile(verify_hook), "98-verify-giri-session.hook.chroot missing")
+        with open(verify_hook, "r", encoding="utf-8") as f:
+            hook_content = f.read()
+        self.assertIn("/usr/share/xsessions/giri-space-classic.desktop", hook_content)
+        self.assertIn("chmod 0755 /usr/bin/giri-session", hook_content)
+        self.assertIn("test -x /usr/bin/giri-session", hook_content)
+
+        # 4. Verify build-iso.sh stages xsessions and /usr/bin/giri-session
+        with open(build_iso_script, "r", encoding="utf-8") as f:
+            build_content = f.read()
+        self.assertIn("${INCLUDES_CHROOT}/usr/share/xsessions", build_content)
+        self.assertIn("chmod 0755 \"${INCLUDES_CHROOT}/usr/bin/giri-session\"", build_content)
+
+    def test_30_lightdm_session_selection_and_dependencies(self):
+        """Test LightDM configuration selects Giri Space and all desktop dependencies are declared."""
+        branding_hook = os.path.join(ROOT_DIR, "build", "live-build", "config", "hooks", "live", "01-setup-giri-branding.hook.chroot")
+        desktop_pkgs = os.path.join(ROOT_DIR, "build", "live-build", "config", "package-lists", "giri-desktop.list.chroot")
+
+        # 1. Verify LightDM autologin and session configuration
+        self.assertTrue(os.path.isfile(branding_hook), "01-setup-giri-branding.hook.chroot missing")
+        with open(branding_hook, "r", encoding="utf-8") as f:
+            hook_content = f.read()
+        self.assertIn("user-session=giri-space-classic", hook_content)
+        self.assertIn("autologin-user=giri", hook_content)
+        self.assertIn("greeter-session=lightdm-gtk-greeter", hook_content)
+        self.assertIn("display-setup-script=/usr/bin/giri-display-setup", hook_content)
+
+        # 2. Verify all critical desktop dependencies are in package list
+        self.assertTrue(os.path.isfile(desktop_pkgs), "giri-desktop.list.chroot missing")
+        with open(desktop_pkgs, "r", encoding="utf-8") as f:
+            pkg_content = f.read()
+        required_pkgs = [
+            "openbox", "picom", "feh", "tint2", "dunst", "lightdm",
+            "lightdm-gtk-greeter", "python3-tk", "python3-psutil",
+            "python3-pil", "kitty", "thunar", "calamares"
+        ]
+        for pkg in required_pkgs:
+            self.assertIn(pkg, pkg_content, f"Required package '{pkg}' missing from giri-desktop.list.chroot")
+
 
 
 if __name__ == "__main__":

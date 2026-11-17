@@ -151,8 +151,11 @@ chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/gaming/giri-gaming/"*.py 2>/dev/null |
 chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/updater/giri-update/"*.py 2>/dev/null || true
 chmod +x "${INCLUDES_CHROOT}/usr/lib/giri/first-boot/"*.py 2>/dev/null || true
 
-# Direct symlinks in /usr/bin
-ln -sf /usr/share/giri-space/session/giri-session "${INCLUDES_CHROOT}/usr/bin/giri-session" 2>/dev/null || true
+# Direct binary in /usr/bin with explicit 0755 permissions
+cp -f "${PROJECT_ROOT}/desktop/giri-space/session/giri-session" "${INCLUDES_CHROOT}/usr/bin/giri-session" 2>/dev/null || true
+chmod 0755 "${INCLUDES_CHROOT}/usr/bin/giri-session" 2>/dev/null || true
+chmod 0755 "${INCLUDES_CHROOT}/usr/share/giri-space/session/giri-session" 2>/dev/null || true
+ln -sf /usr/share/xsessions/giri-space-classic.desktop "${INCLUDES_CHROOT}/usr/share/xsessions/default.desktop" 2>/dev/null || true
 ln -sf /usr/share/giri-space/shell/giri_space.py "${INCLUDES_CHROOT}/usr/bin/giri-space" 2>/dev/null || true
 ln -sf /usr/lib/giri/hardware/giri-hw/detector.py "${INCLUDES_CHROOT}/usr/bin/giri-hw" 2>/dev/null || true
 ln -sf /usr/lib/giri/compatibility/giri-bridge/runner.py "${INCLUDES_CHROOT}/usr/bin/giri-bridge" 2>/dev/null || true
@@ -307,7 +310,7 @@ if [[ -z "${ISO_OUTPUT}" || ! -f "${ISO_OUTPUT}" ]]; then
 fi
 
 mkdir -p "${RELEASES_DIR}"
-ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v3-amd64.iso}"
+ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v4-amd64.iso}"
 TARGET_ISO="${RELEASES_DIR}/${ISO_FILENAME}"
 mv -f "${ISO_OUTPUT}" "${TARGET_ISO}"
 

@@ -116,7 +116,34 @@ fi
 
 # 8. Setup Desktop Entries & Live User Desktop Icons
 mkdir -p /usr/share/xsessions/
-cp -f /usr/share/giri-space/session/*.desktop /usr/share/xsessions/ || true
+
+cat << 'EOF' > /usr/share/xsessions/giri-space-classic.desktop
+[Desktop Entry]
+Name=Giri Space (Classic)
+Comment=Lightweight Giri OS Desktop Environment optimized for Intel HD 2000 and legacy hardware
+Exec=/usr/bin/giri-session --profile classic
+TryExec=/usr/bin/giri-session
+Icon=giri-os-icon
+Type=Application
+DesktopNames=GiriSpace:Classic
+Keywords=giri;desktop;space;classic;legacy;
+EOF
+chmod 0644 /usr/share/xsessions/giri-space-classic.desktop
+
+cat << 'EOF' > /usr/share/xsessions/giri-space-modern.desktop
+[Desktop Entry]
+Name=Giri Space (Modern)
+Comment=Modern Giri OS Desktop Environment with hardware acceleration and fluid visual effects
+Exec=/usr/bin/giri-session --profile modern
+TryExec=/usr/bin/giri-session
+Icon=giri-os-icon
+Type=Application
+DesktopNames=GiriSpace:Modern
+Keywords=giri;desktop;space;modern;
+EOF
+chmod 0644 /usr/share/xsessions/giri-space-modern.desktop
+
+ln -sf /usr/share/xsessions/giri-space-classic.desktop /usr/share/xsessions/default.desktop
 
 mkdir -p /home/giri/Desktop
 if [ -d /etc/skel/Desktop ]; then

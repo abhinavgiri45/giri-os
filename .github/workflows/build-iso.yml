@@ -155,6 +155,27 @@ jobs:
           fi
 
           echo "[+] Kernel, Initrd, and SquashFS verified present."
+
+          echo "[+] Auditing Giri Space desktop session in final SquashFS..."
+          sudo mkdir -p /mnt/giri_squashfs_audit
+          sudo mount -t squashfs -o loop,ro /mnt/giri_iso_audit/live/filesystem.squashfs /mnt/giri_squashfs_audit
+          
+          if [ ! -f /mnt/giri_squashfs_audit/usr/share/xsessions/giri-space-classic.desktop ]; then
+            echo "[-] CRITICAL AUDIT FAILURE: /usr/share/xsessions/giri-space-classic.desktop is missing from SquashFS!"
+            sudo umount /mnt/giri_squashfs_audit || true
+            sudo umount /mnt/giri_iso_audit || true
+            exit 1
+          fi
+
+          if [ ! -x /mnt/giri_squashfs_audit/usr/bin/giri-session ]; then
+            echo "[-] CRITICAL AUDIT FAILURE: /usr/bin/giri-session is missing or not executable in SquashFS!"
+            sudo umount /mnt/giri_squashfs_audit || true
+            sudo umount /mnt/giri_iso_audit || true
+            exit 1
+          fi
+
+          echo "[+] PASSED: /usr/share/xsessions/giri-space-classic.desktop and executable /usr/bin/giri-session verified in final SquashFS!"
+          sudo umount /mnt/giri_squashfs_audit || true
           sudo umount /mnt/giri_iso_audit || true
 
           echo "[+] Verifying SHA256 checksum integrity:"

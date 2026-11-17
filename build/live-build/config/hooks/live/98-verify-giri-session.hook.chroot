@@ -1,0 +1,84 @@
+#!/bin/sh
+set -e
+
+# ====================================================================
+# GIRI OS 0.1 "Genesis" — Live Chroot Session Verification Hook
+# Executed near the end of live-build chroot customization
+# Verifies Giri Space session files, permissions, and dependencies
+# ====================================================================
+
+echo ">>> [Giri OS Audit] Verifying Giri Space Session Staging & Permissions..."
+
+# 1. Ensure /usr/share/xsessions exists
+mkdir -p /usr/share/xsessions
+
+# 2. Verify or create /usr/share/xsessions/giri-space-classic.desktop
+if [ ! -f /usr/share/xsessions/giri-space-classic.desktop ]; then
+    echo ">>> Staging missing /usr/share/xsessions/giri-space-classic.desktop..."
+    cat << 'EOF' > /usr/share/xsessions/giri-space-classic.desktop
+[Desktop Entry]
+Name=Giri Space (Classic)
+Comment=Lightweight Giri OS Desktop Environment optimized for Intel HD 2000 and legacy hardware
+Exec=/usr/bin/giri-session --profile classic
+TryExec=/usr/bin/giri-session
+Icon=giri-os-icon
+Type=Application
+DesktopNames=GiriSpace:Classic
+Keywords=giri;desktop;space;classic;legacy;
+EOF
+fi
+chmod 0644 /usr/share/xsessions/giri-space-classic.desktop
+
+# 3. Verify or create /usr/share/xsessions/giri-space-modern.desktop
+if [ ! -f /usr/share/xsessions/giri-space-modern.desktop ]; then
+    echo ">>> Staging missing /usr/share/xsessions/giri-space-modern.desktop..."
+    cat << 'EOF' > /usr/share/xsessions/giri-space-modern.desktop
+[Desktop Entry]
+Name=Giri Space (Modern)
+Comment=Modern Giri OS Desktop Environment with hardware acceleration and fluid visual effects
+Exec=/usr/bin/giri-session --profile modern
+TryExec=/usr/bin/giri-session
+Icon=giri-os-icon
+Type=Application
+DesktopNames=GiriSpace:Modern
+Keywords=giri;desktop;space;modern;
+EOF
+fi
+chmod 0644 /usr/share/xsessions/giri-space-modern.desktop
+
+# 4. Ensure default.desktop points to giri-space-classic.desktop
+ln -sf /usr/share/xsessions/giri-space-classic.desktop /usr/share/xsessions/default.desktop
+
+# 5. Ensure /usr/bin/giri-session exists and has 0755 permissions
+if [ -f /usr/share/giri-space/session/giri-session ]; then
+    chmod 0755 /usr/share/giri-space/session/giri-session
+    cp -f /usr/share/giri-space/session/giri-session /usr/bin/giri-session
+fi
+
+if [ -f /usr/bin/giri-session ]; then
+    chmod 0755 /usr/bin/giri-session
+else
+    echo "[-] CRITICAL AUDIT FAILURE: /usr/bin/giri-session is missing!" >&2
+    exit 1
+fi
+
+# 6. Ensure Giri Space shell, control center, and scripts are executable (0755)
+if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
+    chmod 0755 /usr/share/giri-space/shell/giri_space.py
+    ln -sf /usr/share/giri-space/shell/giri_space.py /usr/bin/giri-space
+fi
+
+if [ -f /usr/share/giri-space/control-center/control_center.py ]; then
+    chmod 0755 /usr/share/giri-space/control-center/control_center.py
+    ln -sf /usr/share/giri-space/control-center/control_center.py /usr/bin/giri-control
+fi
+
+if [ -f /usr/bin/giri-display-setup ]; then
+    chmod 0755 /usr/bin/giri-display-setup
+fi
+
+# 7. Final Hard Assertion
+test -f /usr/share/xsessions/giri-space-classic.desktop || { echo "[-] ASSERTION FAILED: missing classic desktop"; exit 1; }
+test -x /usr/bin/giri-session || { echo "[-] ASSERTION FAILED: /usr/bin/giri-session not executable"; exit 1; }
+
+echo ">>> [Giri OS Audit] Giri Space session verification PASSED."
