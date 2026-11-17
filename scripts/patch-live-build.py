@@ -79,6 +79,19 @@ def patch_live_build():
                             content += link_code
                             modified = True
 
+                # 5. Patch initsystem to ensure systemd is enforced and sysvinit is never selected for Bookworm
+                if "live-packages" in filepath or "chroot_live-packages" in filepath:
+                    if "live-config-sysvinit" in content:
+                        content = content.replace("live-config-sysvinit", "live-config-systemd")
+                        modified = True
+
+                if "LB_INITSYSTEM" in content:
+                    new_content = re.sub(r'LB_INITSYSTEM=([\'"])?sysvinit\1', r'LB_INITSYSTEM=\1systemd\1', content)
+                    new_content = re.sub(r'LB_INITSYSTEM="\$\{LB_INITSYSTEM:-sysvinit\}"', r'LB_INITSYSTEM="${LB_INITSYSTEM:-systemd}"', new_content)
+                    if new_content != content:
+                        content = new_content
+                        modified = True
+
                 if modified:
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(content)
