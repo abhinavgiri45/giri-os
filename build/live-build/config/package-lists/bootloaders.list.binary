@@ -1,0 +1,7 @@
+# ====================================================================
+# GIRI OS 0.1 "Genesis" — Binary Bootloader Package List
+# Required by lb_binary_grub-efi to build the UEFI boot partition image
+# ====================================================================
+
+grub-efi-amd64-bin
+grub-pc-bin

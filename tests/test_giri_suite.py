@@ -548,12 +548,13 @@ class TestGiriOSCore(unittest.TestCase):
         with open(desktop_pkgs, "r", encoding="utf-8") as f:
             pkg_content = f.read()
         required_pkgs = [
-            "openbox", "picom", "feh", "tint2", "dunst", "lightdm",
+            "openbox", "picom", "feh", "dunst", "lightdm",
             "lightdm-gtk-greeter", "python3-tk", "python3-psutil",
             "python3-pil", "kitty", "thunar", "calamares"
         ]
         for pkg in required_pkgs:
             self.assertIn(pkg, pkg_content, f"Required package '{pkg}' missing from giri-desktop.list.chroot")
+        self.assertNotIn("\ntint2\n", pkg_content, "Redundant tint2 package should be removed to prevent desktop conflicts")
 
     def test_31_bios_com32_module_architecture_verification(self):
         """Test that BIOS Syslinux COM32 modules are explicitly 32-bit and EFI 64-bit modules are rejected."""
@@ -568,7 +569,7 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIn("/usr/lib/syslinux/modules/bios", build_content)
         self.assertIn("*efi*", build_content)
         self.assertIn("ei_class == 2", build_content)
-        self.assertIn("giri-os-0.1-genesis-v5-amd64.iso", build_content)
+        self.assertIn("giri-os-0.1-genesis-v6-amd64.iso", build_content)
 
         # 2. Test ELF architecture discrimination logic
         elf32_header = b"\x7fELF\x01\x01\x01\x00" + b"\x00" * 8
@@ -595,6 +596,9 @@ class TestGiriOSCore(unittest.TestCase):
         """Test UEFI bootloader separation, GRUB configuration and EFI packages."""
         grub_cfg = os.path.join(ROOT_DIR, "boot", "grub", "grub.cfg")
         core_pkgs = os.path.join(ROOT_DIR, "build", "live-build", "config", "package-lists", "giri-core.list.chroot")
+        binary_pkgs = os.path.join(ROOT_DIR, "build", "live-build", "config", "package-lists", "bootloaders.list.binary")
+        auto_cfg = os.path.join(ROOT_DIR, "build", "live-build", "auto", "config")
+        build_sh = os.path.join(ROOT_DIR, "scripts", "build-iso.sh")
 
         # 1. Verify GRUB master configuration preserves UEFI structures
         self.assertTrue(os.path.isfile(grub_cfg), "grub.cfg missing")
@@ -605,7 +609,7 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIn("grub_platform", grub_content)
         self.assertIn("fwsetup", grub_content)
 
-        # 2. Verify UEFI and BIOS packages are both declared in core package list
+        # 2. Verify UEFI and BIOS packages are declared in core and binary package lists
         self.assertTrue(os.path.isfile(core_pkgs), "giri-core.list.chroot missing")
         with open(core_pkgs, "r", encoding="utf-8") as f:
             pkg_content = f.read()
@@ -615,6 +619,22 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIn("isolinux", pkg_content)
         self.assertIn("syslinux-common", pkg_content)
         self.assertIn("syslinux-utils", pkg_content)
+
+        self.assertTrue(os.path.isfile(binary_pkgs), "bootloaders.list.binary missing")
+        with open(binary_pkgs, "r", encoding="utf-8") as f:
+            bin_content = f.read()
+        self.assertIn("grub-efi-amd64-bin", bin_content)
+
+        # 3. Verify auto/config enables hybrid BIOS and UEFI bootloaders
+        self.assertTrue(os.path.isfile(auto_cfg), "auto/config missing")
+        with open(auto_cfg, "r", encoding="utf-8") as f:
+            auto_content = f.read()
+        self.assertIn('--bootloaders "syslinux,grub-efi"', auto_content)
+
+        # 4. Verify build-iso.sh stages grub-efi bootloader templates
+        with open(build_sh, "r", encoding="utf-8") as f:
+            build_content = f.read()
+        self.assertIn("BOOTLOADERS_GRUBEFI", build_content)
 
     def test_33_fontconfig_and_plymouth_earlyboot_optimization(self):
         """Test that font caches are pre-generated, font packages are optimized, and initramfs is updated."""
@@ -693,11 +713,65 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertIn("Plymouth.SetBootProgressFunction", script_content)
         self.assertIn("Plymouth.SetQuitFunction", script_content)
 
-        # 3. Verify clean display handoff script in branding hook
+        # 3. Verify clean display handoff script and lightdm systemd drop-in override
         with open(display_setup, "r", encoding="utf-8") as f:
             setup_content = f.read()
         self.assertIn("plymouth --quit", setup_content)
         self.assertIn("xrandr --auto", setup_content)
+        self.assertIn("/etc/systemd/system/lightdm.service.d/override.conf", setup_content)
+        self.assertIn("Wants=plymouth-quit.service", setup_content)
+        self.assertIn("ExecStartPre=-/bin/sh -c 'if command -v plymouth", setup_content)
+
+    def test_36_intel_hd_2000_hardware_profiler_and_honesty(self):
+        """Test that hardware detector correctly profiles Intel HD 2000 Sandy Bridge and reports Vulkan honestly."""
+        detector_py = os.path.join(ROOT_DIR, "hardware", "giri-hw", "detector.py")
+        self.assertTrue(os.path.isfile(detector_py), "detector.py missing")
+        with open(detector_py, "r", encoding="utf-8") as f:
+            detector_content = f.read()
+
+        # 1. Verify Intel HD 2000 PCI ID matching
+        self.assertIn("8086:0102", detector_content)
+        self.assertIn("is_intel_hd_2000", detector_content)
+        self.assertIn("intel_legacy", detector_content)
+
+        # 2. Verify driver and OpenGL compatibility mappings
+        self.assertIn("i915 (crocus)", detector_content)
+        self.assertIn("OpenGL 3.1 (Mesa crocus)", detector_content)
+
+        # 3. Verify strictly honest Vulkan reporting (no spoofing)
+        self.assertIn("vulkan_supported", detector_content)
+        self.assertIn("Intel Sandy Bridge (HD 2000/3000) lacks hardware Vulkan support.", detector_content)
+
+    def test_37_session_crash_recovery_and_openbox_fallback(self):
+        """Test fail-safe session crash recovery dialog, logging, and Openbox menu fallback."""
+        recovery_py = os.path.join(ROOT_DIR, "desktop", "giri-space", "session", "giri_recovery.py")
+        session_script = os.path.join(ROOT_DIR, "desktop", "giri-space", "session", "giri-session")
+        openbox_menu = os.path.join(ROOT_DIR, "system", "skel", ".config", "openbox", "menu.xml")
+
+        # 1. Verify recovery dialog exists and imports cleanly
+        self.assertTrue(os.path.isfile(recovery_py), "giri_recovery.py missing")
+        with open(recovery_py, "r", encoding="utf-8") as f:
+            rec_content = f.read()
+        self.assertIn("GiriRecoveryDialog", rec_content)
+        self.assertIn("Giri Space — Session Recovery", rec_content)
+        self.assertIn("Open Terminal", rec_content)
+        self.assertIn("Retry (Safe Graphics)", rec_content)
+
+        # 2. Verify giri-session implements crash trapping, logging, and recovery invocation
+        with open(session_script, "r", encoding="utf-8") as f:
+            script_content = f.read()
+        self.assertIn("SESSION_LOG=", script_content)
+        self.assertIn("giri_recovery.py", script_content)
+        self.assertIn("Fail-Safe Recovery Mode", script_content)
+        self.assertIn("xsetroot -solid", script_content)
+
+        # 3. Verify Openbox fallback root menu exists and contains recovery options
+        self.assertTrue(os.path.isfile(openbox_menu), "Openbox menu.xml missing")
+        with open(openbox_menu, "r", encoding="utf-8") as f:
+            menu_content = f.read()
+        self.assertIn("Giri OS 0.1 Genesis", menu_content)
+        self.assertIn("Session Recovery &amp; Diagnostics", menu_content)
+        self.assertIn("giri_recovery.py", menu_content)
 
 
 

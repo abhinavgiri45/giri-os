@@ -73,6 +73,11 @@ if [ -f /usr/share/giri-space/control-center/control_center.py ]; then
     ln -sf /usr/share/giri-space/control-center/control_center.py /usr/bin/giri-control
 fi
 
+if [ -f /usr/share/giri-space/session/giri_recovery.py ]; then
+    chmod 0755 /usr/share/giri-space/session/giri_recovery.py
+    ln -sf /usr/share/giri-space/session/giri_recovery.py /usr/bin/giri-recovery
+fi
+
 if [ -f /usr/bin/giri-display-setup ]; then
     chmod 0755 /usr/bin/giri-display-setup
 fi

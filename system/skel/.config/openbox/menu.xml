@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openbox_menu xmlns="http://openbox.org/3.4/menu">
+  <menu id="root-menu" label="Giri OS">
+    <separator label="Giri OS 0.1 Genesis"/>
+    <item label="Terminal">
+      <action name="Execute">
+        <command>kitty</command>
+      </action>
+    </item>
+    <item label="File Manager">
+      <action name="Execute">
+        <command>thunar</command>
+      </action>
+    </item>
+    <item label="Control Center">
+      <action name="Execute">
+        <command>giri-control</command>
+      </action>
+    </item>
+    <item label="Install Giri OS">
+      <action name="Execute">
+        <command>sudo calamares</command>
+      </action>
+    </item>
+    <separator label="Recovery &amp; System"/>
+    <item label="Session Recovery &amp; Diagnostics">
+      <action name="Execute">
+        <command>python3 /usr/share/giri-space/session/giri_recovery.py</command>
+      </action>
+    </item>
+    <item label="Restart Giri Space Desktop">
+      <action name="Execute">
+        <command>/usr/bin/giri-session --profile classic</command>
+      </action>
+    </item>
+    <separator/>
+    <item label="Reboot">
+      <action name="Execute">
+        <command>systemctl reboot</command>
+      </action>
+    </item>
+    <item label="Power Off">
+      <action name="Execute">
+        <command>systemctl poweroff</command>
+      </action>
+    </item>
+  </menu>
+</openbox_menu>

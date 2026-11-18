@@ -195,6 +195,8 @@ ln -sf /usr/lib/giri/hardware/giri-hw/detector.py "${INCLUDES_CHROOT}/usr/bin/gi
 ln -sf /usr/lib/giri/compatibility/giri-bridge/runner.py "${INCLUDES_CHROOT}/usr/bin/giri-bridge" 2>/dev/null || true
 ln -sf /usr/lib/giri/gaming/giri-gaming/governor.py "${INCLUDES_CHROOT}/usr/bin/giri-game" 2>/dev/null || true
 ln -sf /usr/lib/giri/updater/giri-update/client.py "${INCLUDES_CHROOT}/usr/bin/giri-update" 2>/dev/null || true
+ln -sf /usr/share/giri-space/session/giri_recovery.py "${INCLUDES_CHROOT}/usr/bin/giri-recovery" 2>/dev/null || true
+chmod 0755 "${INCLUDES_CHROOT}/usr/share/giri-space/session/giri_recovery.py" 2>/dev/null || true
 
 # Display setup script to cleanly terminate Plymouth and initialize xrandr
 cat << 'EOF' > "${INCLUDES_CHROOT}/usr/bin/giri-display-setup"
@@ -268,25 +270,31 @@ cp -f "${PROJECT_ROOT}/system/etc/lsb-release" "${INCLUDES_CHROOT}/etc/lsb-relea
 cp -f "${PROJECT_ROOT}/system/etc/giri-wallpaper.json" "${INCLUDES_CHROOT}/etc/giri-wallpaper.json" || true
 cp -f "${PROJECT_ROOT}/system/etc/giri-desktop-prefs.json" "${INCLUDES_CHROOT}/etc/giri-desktop-prefs.json" || true
 
-# 4h. Copy Desktop shortcuts to /etc/skel/Desktop and /usr/share/applications
+# 4h. Copy Desktop shortcuts and user skeleton configs
 cp -f "${PROJECT_ROOT}/desktop/giri-space/shortcuts/"*.desktop "${INCLUDES_CHROOT}/etc/skel/Desktop/" || true
 cp -f "${PROJECT_ROOT}/desktop/giri-space/shortcuts/"*.desktop "${INCLUDES_CHROOT}/usr/share/applications/" || true
+mkdir -p "${INCLUDES_CHROOT}/etc/skel/.config/openbox"
+cp -rf "${PROJECT_ROOT}/system/skel/.config/openbox/"* "${INCLUDES_CHROOT}/etc/skel/.config/openbox/" 2>/dev/null || true
 
 # 4i. Stage Binary ISO Bootloader Assets (GRUB and ISOLINUX)
 echo "[+] Staging binary bootloader configurations for hybrid BIOS/UEFI boot..."
 INCLUDES_BINARY="${LIVE_BUILD_DIR}/config/includes.binary"
 BOOTLOADERS_ISOLINUX="${LIVE_BUILD_DIR}/config/bootloaders/isolinux"
 BOOTLOADERS_COMMON="${LIVE_BUILD_DIR}/config/bootloaders/syslinux_common"
+BOOTLOADERS_GRUBEFI="${LIVE_BUILD_DIR}/config/bootloaders/grub-efi"
 
 mkdir -p "${INCLUDES_BINARY}/boot/grub/themes/giri"
 mkdir -p "${INCLUDES_BINARY}/isolinux"
 mkdir -p "${BOOTLOADERS_ISOLINUX}"
 mkdir -p "${BOOTLOADERS_COMMON}"
+mkdir -p "${BOOTLOADERS_GRUBEFI}"
 mkdir -p "${INCLUDES_CHROOT}/usr/lib/ISOLINUX"
 mkdir -p "${INCLUDES_CHROOT}/usr/lib/syslinux/modules/bios"
 
 cp -f "${PROJECT_ROOT}/boot/grub/grub.cfg" "${INCLUDES_BINARY}/boot/grub/grub.cfg" || true
 cp -rf "${PROJECT_ROOT}/boot/grub/"* "${INCLUDES_BINARY}/boot/grub/themes/giri/" || true
+cp -f "${PROJECT_ROOT}/boot/grub/grub.cfg" "${BOOTLOADERS_GRUBEFI}/grub.cfg" || true
+cp -rf "${PROJECT_ROOT}/boot/grub/"* "${BOOTLOADERS_GRUBEFI}/" || true
 cp -f "${PROJECT_ROOT}/boot/isolinux/isolinux.cfg" "${INCLUDES_BINARY}/isolinux/isolinux.cfg" || true
 cp -f "${PROJECT_ROOT}/boot/isolinux/isolinux.cfg" "${BOOTLOADERS_ISOLINUX}/isolinux.cfg" || true
 
@@ -369,7 +377,7 @@ if [[ -z "${ISO_OUTPUT}" || ! -f "${ISO_OUTPUT}" ]]; then
 fi
 
 mkdir -p "${RELEASES_DIR}"
-ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v5-amd64.iso}"
+ISO_FILENAME="${ISO_FILENAME:-giri-os-0.1-genesis-v6-amd64.iso}"
 TARGET_ISO="${RELEASES_DIR}/${ISO_FILENAME}"
 mv -f "${ISO_OUTPUT}" "${TARGET_ISO}"
 

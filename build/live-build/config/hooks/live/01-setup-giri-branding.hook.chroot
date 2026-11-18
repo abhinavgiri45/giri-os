@@ -84,6 +84,17 @@ exit 0
 EOF
 chmod +x /usr/bin/giri-display-setup
 
+# 5b. Configure systemd LightDM override to ensure Plymouth releases DRM master before Xorg
+mkdir -p /etc/systemd/system/lightdm.service.d
+cat << 'EOF' > /etc/systemd/system/lightdm.service.d/override.conf
+[Unit]
+Wants=plymouth-quit.service
+After=plymouth-quit.service
+
+[Service]
+ExecStartPre=-/bin/sh -c 'if command -v plymouth >/dev/null 2>&1; then plymouth --quit; fi'
+EOF
+
 # 6. Ensure Giri Space Desktop & Session Executables are Linked
 if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
     chmod +x /usr/share/giri-space/shell/giri_space.py

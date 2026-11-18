@@ -81,17 +81,85 @@ if [ ! -d /run/live ] && [ ! -f /var/lib/giri/first-boot-done ] && [ ! -f "$HOME
     fi
 fi
 
-# 5. Launch Giri Space Desktop Shell as main session process
+# 5. Launch Giri Space Desktop Shell with Fail-Safe Crash Recovery
 # Map graphics profile to desktop shell tier ('modern' or 'classic')
 SHELL_TIER="classic"
 if [ "$PROFILE" = "modern" ]; then
     SHELL_TIER="modern"
 fi
 
+# Ensure diagnostic log directory exists
+LOG_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/giri/logs"
+mkdir -p "$LOG_DIR"
+SESSION_LOG="$LOG_DIR/session.log"
+echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Giri Space session starting (profile: $PROFILE, tier: $SHELL_TIER)..." >> "$SESSION_LOG"
+
+# Locate shell script
+SHELL_SCRIPT=""
 if [ -f /usr/share/giri-space/shell/giri_space.py ]; then
-    exec python3 /usr/share/giri-space/shell/giri_space.py --profile "$SHELL_TIER"
+    SHELL_SCRIPT="/usr/share/giri-space/shell/giri_space.py"
 elif [ -f "$(dirname "$0")/../shell/giri_space.py" ]; then
-    exec python3 "$(dirname "$0")/../shell/giri_space.py" --profile "$SHELL_TIER"
+    SHELL_SCRIPT="$(dirname "$0")/../shell/giri_space.py"
+fi
+
+# Locate recovery dialog script
+RECOVERY_SCRIPT=""
+if [ -f /usr/share/giri-space/session/giri_recovery.py ]; then
+    RECOVERY_SCRIPT="/usr/share/giri-space/session/giri_recovery.py"
+elif [ -f "$(dirname "$0")/giri_recovery.py" ]; then
+    RECOVERY_SCRIPT="$(dirname "$0")/giri_recovery.py"
+fi
+
+if [ -n "$SHELL_SCRIPT" ]; then
+    # Launch desktop shell and capture execution
+    START_TIME=$(date +%s)
+    python3 "$SHELL_SCRIPT" --profile "$SHELL_TIER" 2>&1 | tee -a "$SESSION_LOG"
+    SHELL_EXIT=$?
+    END_TIME=$(date +%s)
+    RUNTIME=$((END_TIME - START_TIME))
+
+    # If exit code is 0, user intentionally exited/logged out
+    if [ "$SHELL_EXIT" -eq 0 ]; then
+        echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Giri Space session exited cleanly." >> "$SESSION_LOG"
+        exit 0
+    fi
+
+    # Unhandled failure detected: Enter Fail-Safe Recovery Mode
+    echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] WARNING: Giri Space crashed (exit code: $SHELL_EXIT, runtime: ${RUNTIME}s)." >> "$SESSION_LOG"
+
+    # Ensure window manager is running so user has window controls
+    if ! pidof openbox >/dev/null 2>&1; then
+        openbox --sm-disable &
+    fi
+
+    # Set background color to prevent black screen
+    if command -v xsetroot >/dev/null 2>&1; then
+        xsetroot -solid "#0a0e1a" || true
+    fi
+
+    # If recovery script is available, run recovery dialog
+    if [ -n "$RECOVERY_SCRIPT" ]; then
+        python3 "$RECOVERY_SCRIPT" "$SESSION_LOG"
+        RECOVERY_EXIT=$?
+        # Exit code 42 indicates user requested Safe Graphics retry
+        if [ "$RECOVERY_EXIT" -eq 42 ]; then
+            echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] User requested Safe Graphics retry." >> "$SESSION_LOG"
+            exec python3 "$SHELL_SCRIPT" --profile classic 2>&1 | tee -a "$SESSION_LOG"
+        fi
+    fi
+
+    # Fail-safe terminal access to ensure user is NEVER locked out
+    echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] Opening fail-safe rescue terminal..." >> "$SESSION_LOG"
+    for term in kitty xterm xfce4-terminal; do
+        if command -v "$term" >/dev/null 2>&1; then
+            exec "$term"
+        fi
+    done
 else
-    exec xterm
+    echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] CRITICAL: giri_space.py not found! Starting emergency terminal..." >> "$SESSION_LOG"
+    for term in kitty xterm xfce4-terminal; do
+        if command -v "$term" >/dev/null 2>&1; then
+            exec "$term"
+        fi
+    done
 fi

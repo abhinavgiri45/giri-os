@@ -42,7 +42,6 @@ policykit-1-gnome
 openbox
 picom
 feh
-tint2
 rofi
 dunst
 libnotify-bin
