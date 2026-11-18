@@ -46,5 +46,5 @@ If you discover a security vulnerability in Giri OS:
    - Potential impact (privilege escalation, denial of service, sandbox bypass).
    - Mitigation suggestions if known.
 3. Submit the report directly to the lead architect:
-   - **Contact:** `security@girios.org` (or directly via private vulnerability reporting on the GitHub repository).
+   - **Contact:** `abhinavgiri370@gmail.com` (or directly via private vulnerability reporting on the GitHub repository).
 4. You will receive an initial acknowledgment within **48 hours**, followed by a timeline for remediation and public disclosure.
