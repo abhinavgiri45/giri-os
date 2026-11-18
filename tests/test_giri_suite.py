@@ -629,7 +629,7 @@ class TestGiriOSCore(unittest.TestCase):
         self.assertTrue(os.path.isfile(auto_cfg), "auto/config missing")
         with open(auto_cfg, "r", encoding="utf-8") as f:
             auto_content = f.read()
-        self.assertIn('--bootloaders "syslinux,grub-efi"', auto_content)
+        self.assertIn('--bootloader "syslinux,grub-efi"', auto_content)
 
         # 4. Verify build-iso.sh stages grub-efi bootloader templates
         with open(build_sh, "r", encoding="utf-8") as f:
